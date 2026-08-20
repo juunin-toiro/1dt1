@@ -1,0 +1,14 @@
+.lumi-mood-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+.lumi-mood-icon--neutral,
+.lumi-mood-icon--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}

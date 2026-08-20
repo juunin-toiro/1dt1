@@ -1,0 +1,671 @@
+.story-player {
+  width: min(720px, 100%);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.story-status {
+  padding: 32px;
+  text-align: center;
+  color: #a8a79c;
+}
+
+.story-status--error {
+  color: #e08a6a;
+}
+
+/* Verlauf + Buehne zusammen sind der Fokusbereich. justify-content: center
+   sorgt dafuer, dass diese Einheit im verfuegbaren Freiraum mittig sitzt,
+   statt (wie vorher) den kompletten Raum zu fuellen und dadurch am unteren
+   Bildschirmrand zu kleben. Die Gesamthoehe der Einheit aendert sich nur an
+   klar umrissenen Punkten (neue Zeile, Choices erscheinen) - waehrend des
+   Tippens bleibt sie stabil (siehe .story-stage__text-frame), es gibt also
+   nichts, das hier kontinuierlich neu zentriert werden muesste. */
+.story-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Verlauf: alles Vergangene, kompakt und begrenzt (nicht unbegrenzt
+   wachsend) - scrollt intern bei Bedarf, ohne sichtbare Scrollbar. Das
+   Ausblenden nach oben greift NUR, wenn tatsaechlich etwas weggescrollt ist
+   (Klasse .is-scrollable, gesetzt von useScrollFollow) - sonst wuerde die
+   Fade-Distanz (~eine Zeilenhoehe) bei kurzem Inhalt den kompletten
+   sichtbaren Text anblassen statt nur echten Verlauf auszublenden. */
+.story-history {
+  flex: 0 1 auto;
+  max-height: min(38vh, 320px);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.story-history.is-scrollable {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 28px);
+  mask-image: linear-gradient(to bottom, transparent 0, black 28px);
+}
+
+.story-history::-webkit-scrollbar {
+  display: none;
+}
+
+.story-history__content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Buehne: die aktuelle Zeile plus (sobald vorhanden) der dazugehoerige
+   Choice-/Weiter-Block - als EINE Einheit, nie getrennt. flex-column mit dem
+   Skip-Button als eigene Zeile UNTER dem scrollenden Bereich (nicht mehr
+   absolut ueberlagert) - so kann er nie von langen Choice-Listen verdeckt
+   werden, siehe .story-skip weiter unten. */
+.story-stage {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  animation: story-stage-fade-in 0.3s ease-out;
+  /* Kurzer Delay, bevor die neue Buehne einfaehrt: die alte Zeile "setzt sich"
+     zuerst sichtbar in den Verlauf (instant, kein Exit-Fade noetig, siehe
+     Audit), dann erst kommt der neue Inhalt - dadurch wirkt der Wechsel als
+     zwei kurz versetzte Schritte statt als ein einziger, symmetrischer
+     Sprung. animation-fill-mode: backwards haelt die Buehne waehrend des
+     Delays im "from"-Zustand (opacity:0), sonst wuerde sie kurz voll
+     sichtbar aufblitzen, bevor die Animation ueberhaupt startet. */
+  animation-delay: 90ms;
+  animation-fill-mode: backwards;
+}
+
+/* Bisher hatten nur Dialog-Bubbles eine Eintrittsanimation - narrative
+   Zeilen (der Grossteil des Texts) poppten instant auf, bevor der Typewriter
+   startete, was nach einer Choice ruckartig wirkte. Dieses Fade greift fuer
+   JEDE neue Buehne (StoryStage wird komplett neu gemountet, siehe
+   key={entry.id} im Aufrufer). Bewusst reines Opacity-Fade OHNE translateY
+   mehr - der kleine vertikale Versatz waehrend der laufenden Animation liess
+   sich in Messungen als leichter Drift zwischen Mount und Settle nachweisen
+   (siehe Audit), das Entfernen behebt beides in einem Zug. */
+@keyframes story-stage-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* max-height + overflow-y:auto ohne explizites overflow-x fuehrt dazu, dass
+   Browser overflow-x trotzdem intern als "auto" behandeln (CSS-Spezifikation:
+   sobald eine Achse nicht "visible" ist, wird die andere ebenfalls geklippt) -
+   das hat jeden Hover-Glow einer Knowledge-Gluehbirne am Rand hart
+   abgeschnitten. Der Ausgleich aus Padding hier + gleich grossem negativem
+   Margin auf .story-stage__scroll-content haelt das sichtbare Layout pixel-
+   identisch, gibt dem Glow aber Platz, bevor er auf die echte Clip-Kante trifft. */
+.story-stage__scroll {
+  max-height: min(60vh, 480px);
+  overflow-y: auto;
+  padding: 0 20px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Buehne ist jetzt oben (an der Frage) verankert statt unten (siehe
+   useScrollFollow.ts, anchor='start') - falls Frage+Choices nicht
+   hineinpassen, wird der UNTERE Rand abgeschnitten, nicht der obere. Die
+   Fade-Richtung muss deshalb umgekehrt sein (fadet nach unten aus statt
+   nach oben), sonst wuerde sie einen falschen "mehr oben"-Hinweis geben,
+   obwohl die Frage bereits vollstaendig sichtbar ist. */
+.story-stage__scroll.is-scrollable {
+  -webkit-mask-image: linear-gradient(to top, transparent 0, black 28px);
+  mask-image: linear-gradient(to top, transparent 0, black 28px);
+}
+
+.story-stage__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.story-stage__scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 -20px;
+}
+
+.story-stage__text-frame {
+  position: relative;
+}
+
+/* Unsichtbarer Zwilling mit dem vollen Text, misst die Endhoehe (siehe
+   StoryPlayer.tsx) - nimmt selbst keinen Platz im Fluss ein. */
+.story-stage__ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Grid-basierter Hoehen-Trick: animiert von "kein Platz" zu "natuerliche
+   Hoehe" ohne JS-Messung - der Choice-/Weiter-Block klappt sanft auf statt
+   abrupt zu erscheinen, wenn er zur Buehne dazukommt. */
+.story-stage__interactive {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 260ms ease;
+}
+
+.story-stage__interactive--visible {
+  grid-template-rows: 1fr;
+}
+
+.story-stage__interactive-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Sobald das Panel voll ausgeklappt ist, muss nicht mehr geklippt werden -
+   das overflow:hidden oben ist nur waehrend der Grid-Hoehen-Transition selbst
+   noetig. Ohne dieses Override wurde jeder Hover-Glow/-Scale an einer Knowledge-
+   Gluehbirne am Rand dieses Containers hart abgeschnitten. */
+.story-stage__interactive--visible .story-stage__interactive-inner {
+  overflow: visible;
+}
+
+.story-line {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #f2efe6;
+  white-space: pre-line;
+}
+
+.story-mark {
+  background: transparent;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.story-mark--typing {
+  background: rgba(var(--mark-color-rgb, 217, 119, 87), 0.28);
+}
+
+.story-mark--settled {
+  background: rgba(var(--mark-color-rgb, 217, 119, 87), 0.12);
+}
+
+/* Szenenwechsel (<dark_screen>): eigener, ruhiger Screen statt normalem
+   Fliesstext - z.B. der Alarm-Moment oder der Uebergang nach dem
+   Perspektivenwechsel-Entscheid. Zentriert, groesser, mit einem spuerbar
+   langsameren Fade als der normale Buehnenwechsel (siehe .story-stage), damit
+   der Moment bewusst wirkt statt abrupt reinzuspringen - das eigentliche
+   "Halten" des Screens uebernimmt ein pauseBeat() direkt im .lor-Skript. */
+.story-scene-screen {
+  text-align: center;
+  font-size: 1.45rem;
+  line-height: 1.7;
+  padding: 32px 8px;
+  animation: story-scene-screen-fade-in 0.6s ease-out;
+}
+
+@keyframes story-scene-screen-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Rechtlicher Disclaimer: seriös statt alarmistisch, kein Box-Shadow, keine
+   Rahmen-/Flaechen-Loesung mehr - der Text selbst glueht subtil (text-shadow),
+   bleibt aber typografisch/narrativ Teil des normalen Fliesstexts statt sich
+   als eigenes Panel abzusetzen. */
+.story-disclaimer {
+  color: #f2efe6;
+  text-shadow: 0 0 10px rgba(217, 119, 87, 0.45), 0 0 22px rgba(217, 119, 87, 0.25);
+}
+
+/* Dialog-Bubbles: Balu links (koerpernahe Ebene), Lumi rechts (innere,
+   subjektive Stimme). Chef/Robin/... erscheinen bewusst OHNE eigene Zone -
+   linksbuendig wie Balu, integriert in den normalen Fliesstext statt als
+   eigener Dialogblock (eine eigene Mittelzone/Bubble-Optik wurde getestet
+   und wieder verworfen: zu viele gleichzeitige visuelle Kanaele neben
+   Sprecherfarbe/Moodfarbe/Tageszeitfarbe, und ein zusaetzlicher, den
+   Lesefluss unterbrechender Block). Icon/Name und Text stehen bei ALLEN auf
+   derselben Zeile (kein Name-oben/Text-unten mehr). max-width verhindert,
+   dass eine Bubble ueber die ganze Spaltenbreite laeuft wie in einer echten
+   Chat-Oberflaeche. */
+.story-bubble {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  max-width: 75%;
+}
+
+.story-bubble--left {
+  align-self: flex-start;
+  text-align: left;
+}
+
+.story-bubble--right {
+  align-self: flex-end;
+  text-align: right;
+}
+
+.story-bubble__icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Name (Chef/Robin/...): Medium/Bold-Gewicht + dezente, per-Person-Farbe
+   (siehe SOCIAL_VOICE_COLORS/CharacterName) als einziges, leises
+   Unterscheidungsmerkmal - keine Flaeche, kein Badge, keine Grossschrift. */
+.story-bubble__name {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.story-bubble__text {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #f2efe6;
+  white-space: pre-line;
+}
+
+.story-bubble--monaspace {
+  font-family: "Monaspace Argon", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Balu und Lumi sind die inneren Stimmen (Koerper + Emotion) - ihr Text
+   erscheint sofort, nur sanft eingeblendet. Chef/Robin/... sind externe
+   Personen und gleiten wie eine Chat-Nachricht von unten herein - beides
+   bewusst OHNE Typewriter (siehe StoryStage in StoryPlayer.tsx). */
+@keyframes story-bubble-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes story-bubble-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-bubble--appear {
+  animation: story-bubble-appear 0.35s ease;
+}
+
+.story-bubble--slide {
+  animation: story-bubble-slide-up 0.35s ease-out;
+}
+
+/* Skip-Button: eigene Zeile in normalem Fluss statt absolutem Overlay (siehe
+   .story-stage), damit er nie von einer langen Choice-Liste ueberdeckt werden
+   kann - er hat dadurch immer seinen eigenen reservierten Platz. Bewusst kein
+   Rahmen/Hintergrund im Ruhezustand (ghost), Feedback kommt ausschliesslich
+   ueber Hover/Active/Focus. min-width/-height sorgen fuer ein echtes 44x44
+   Touch-Ziel (gemessen vorher: ~47x29px, zu knapp in der Hoehe) - das ist die
+   tatsaechliche Klickflaeche (Box-Modell), keine optische Vergroesserung per
+   Transform/Overlay, der sichtbare Text/Glyph bleibt dabei unveraendert klein. */
+.story-skip {
+  align-self: flex-end;
+  margin-top: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #8b8fa3;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.story-skip:hover {
+  color: #f2efe6;
+  background: rgba(242, 239, 230, 0.08);
+  transform: scale(1.05);
+}
+
+.story-skip:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 14px rgba(217, 119, 87, 0.6);
+}
+
+.story-skip:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 2px;
+}
+
+/* Nach einem Aha-Moment (Wissens-Modal geschlossen) uebernimmt >>> die Rolle
+   eines "Weiter" - das soll sich wie eine natuerliche Fortsetzung des eben
+   Gelesenen anfuehlen, nicht wie ein neuer, konkurrierender Interaktions-
+   Block: Fliesstextfarbe statt Ghost-Grau, Unterstreichung faehrt beim Hover
+   sanft ein (wie bei normalen Choices) statt Flaeche/Skalierung/Glow, und ein
+   kurzes, ruhiges Einblenden beim ersten Erscheinen macht ihn auffindbar,
+   ohne aufdringlich zu wirken. */
+.story-skip--continue {
+  color: #f2efe6;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+  animation: story-skip-continue-in 0.3s ease-out;
+}
+
+.story-skip--continue:hover {
+  color: #f2efe6;
+  background: transparent;
+  transform: none;
+  text-decoration-color: currentColor;
+}
+
+.story-skip--continue:active {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+@keyframes story-skip-continue-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Choices/Weiter: linksbuendig wie der uebrige Text, kein Rahmen/Hintergrund,
+   auch nicht bei Hover (der Pfeil + die Unterstreichung SIND das gesamte
+   Interaktions-Signal, kein zusaetzliches Flaechen-Feedback). Text und Choice
+   bleiben dadurch ein zusammenhaengender Lesemoment. Hover bewegt den Pfeil
+   naeher an den Text heran UND laesst die Unterstreichung des Textes von
+   links nach rechts einlaufen (siehe .story-choice__label) - der Pfeil selbst
+   ist in KEINEM Zustand unterstrichen. */
+.story-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* display:block statt inline-flex ist hier bewusst - der Pfeil wird absolut
+   positioniert (statt Flex-Item zu sein), damit .story-choice__label ein
+   ECHTES Inline-Element im normalen Textfluss bleibt. Nur so fragmentiert der
+   Browser mehrzeilig umgebrochenen Text in echte Pro-Zeile-Boxen, auf denen
+   box-decoration-break: clone (siehe unten) ueberhaupt greift - als Flex-Item
+   waere das Label eine einzige "blockifizierte" Box, und die Sweep-
+   Unterstreichung haette nur unter der letzten Zeile funktioniert. */
+.story-choice {
+  display: block;
+  position: relative;
+  padding: 8px 10px 8px 26px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(var(--choice-accent-rgb, 217, 119, 87), 0.92);
+  font-family: "Monaspace Argon", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.story-choice__marker {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  color: rgba(var(--choice-accent-rgb, 217, 119, 87), 0.6);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+/* Sweep-Unterstreichung: ein Gradient als Hintergrund statt text-decoration,
+   damit sie praezise von 0% auf 100% Breite animiert (echtes "links nach
+   rechts" statt Farb-Fade) und ueber mehrzeilig umgebrochene Choices hinweg
+   korrekt funktioniert (box-decoration-break: clone repliziert den Gradient
+   pro Zeile, greift aber nur bei echtem Inline-Fluss, siehe .story-choice
+   oben). Faengt bewusst NUR den Textteil ein, nie den Pfeil daneben. */
+.story-choice__label {
+  display: inline;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1.5px;
+  padding-bottom: 2px;
+  transition: background-size 0.25s ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.story-choice:hover .story-choice__marker,
+.story-choice:focus-visible .story-choice__marker {
+  color: rgba(var(--choice-accent-rgb, 217, 119, 87), 1);
+  transform: translateX(4px);
+}
+
+.story-choice:hover .story-choice__label,
+.story-choice:focus-visible .story-choice__label {
+  background-size: 100% 1.5px;
+}
+
+.story-choice:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 2px;
+}
+
+.story-choice:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Wissens-Button: einziger Sonderfall unter den Choices. Bewusst minimalistisch
+   gehalten - duenner Ring + dezente Flaeche in der Akzentfarbe statt Farbverlauf
+   und Dauerglow, das eigentliche "hier gibt's was zu entdecken"-Signal ist der
+   Kontrast zu den Ghost-Choices daneben. Verschwindet nach dem Klick komplett
+   von hier (siehe Filter in StoryPlayer.tsx) - der Flug in die Statusleiste
+   (flyKnowledgeIconToStatusBar) ersetzt das frühere "bleibt gedimmt liegen". */
+.story-knowledge-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(244, 197, 66, 0.5);
+  border-radius: 50%;
+  background: rgba(244, 197, 66, 0.12);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.story-knowledge-button:hover {
+  background: rgba(244, 197, 66, 0.2);
+  border-color: rgba(244, 197, 66, 0.75);
+  transform: scale(1.05);
+}
+
+.story-knowledge-button:active {
+  transform: scale(0.95);
+}
+
+.story-knowledge-button:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 3px;
+}
+
+/* Ausnahme fuer die allererste Wissens-Choice ("Was ist Diabetes??", <first_
+   knowledge>-Tag): zeigt Icon + Text als Pille statt reinem Kreis, damit das
+   Konzept beim ersten Kontakt verstaendlich ist, plus eine kurze (nicht
+   endlos wiederholte), einladende Leucht-Sequenz. */
+.story-knowledge-button--intro {
+  width: auto;
+  height: auto;
+  padding: 10px 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Monaspace Argon", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  color: #f2efe6;
+  animation: knowledge-invite-glow 1.6s ease-in-out 2;
+}
+
+@keyframes knowledge-invite-glow {
+  0%,
+  100% {
+    background: rgba(244, 197, 66, 0.12);
+    border-color: rgba(244, 197, 66, 0.5);
+    box-shadow: none;
+  }
+  50% {
+    background: rgba(244, 197, 66, 0.28);
+    border-color: rgba(244, 197, 66, 0.9);
+    box-shadow: 0 0 18px 2px rgba(244, 197, 66, 0.5);
+  }
+}
+
+/* Alle uebrigen Wissens-Choices teilen sich mit >>> denselben Slot (siehe
+   StoryPlayer.tsx) - taucht nur auf, wenn nichts mehr zu ueberspringen ist.
+   Bleibt in Ruhe bewusst reines Icon (keine Farb-/Rahmenaenderung wie bei der
+   Einladungs-Pille), nur ein kurzer, dezenter Puls beim Erscheinen macht auf
+   die neue Position aufmerksam, statt dauerhaft zu leuchten. */
+.story-knowledge-button--corner {
+  align-self: flex-end;
+  margin-top: 6px;
+  animation: knowledge-corner-pulse 1.4s ease-in-out 2;
+}
+
+@keyframes knowledge-corner-pulse {
+  0%,
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgba(244, 197, 66, 0.45);
+    transform: scale(1.08);
+  }
+}
+
+/* Die fliegende Gluehbirne selbst: ein einzelnes, kurzlebiges DOM-Element
+   ausserhalb von React (siehe flyKnowledgeIconToStatusBar), das per WAAPI von
+   der Klickstelle zur Statusleiste animiert und sich danach selbst entfernt. */
+.story-knowledge-flyer {
+  position: fixed;
+  z-index: 60;
+  font-size: 1.15rem;
+  line-height: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Wissens-Modal: Popup im Vordergrund, Hintergrund abgedunkelt. Schliessen
+   per "aha"-Button, Klick auf das Backdrop oder Escape (alle drei gleichwertig,
+   siehe KnowledgeModal in StoryPlayer.tsx). */
+.knowledge-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+  animation: knowledge-modal-fade-in 0.2s ease;
+}
+
+.knowledge-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: min(440px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #1b1e27;
+  border: 1px solid rgba(242, 239, 230, 0.14);
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* "aha"-Button: fuehlt sich wie ein bewusstes Uebernehmen des Wissensmoments
+   an statt wie ein generisches Schliessen-Kreuz - derselbe minimalistische
+   Ring/Flaechen-Stil wie die uebrigen Wissens-Gluehbirnen. */
+.knowledge-modal__aha {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid rgba(244, 197, 66, 0.5);
+  border-radius: 999px;
+  background: rgba(244, 197, 66, 0.12);
+  font-family: "Monaspace Argon", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1rem;
+  color: #f2efe6;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.knowledge-modal__aha:hover {
+  background: rgba(244, 197, 66, 0.2);
+  border-color: rgba(244, 197, 66, 0.75);
+  transform: scale(1.05);
+}
+
+.knowledge-modal__aha:active {
+  transform: scale(0.95);
+}
+
+.knowledge-modal__aha:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 2px;
+}
+
+.knowledge-modal__text {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #f2efe6;
+  white-space: pre-line;
+}
+
+@keyframes knowledge-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

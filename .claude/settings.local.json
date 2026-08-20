@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm ls *)",
+      "WebFetch(domain:loreline.app)",
+      "Bash(cp \"C:/Users/julie/Downloads/one-day \\(9\\).lor\" \"C:/Users/julie/Documents/Interactive Fiction/1dt1/public/story/one-day.lor\" && wc -l \"C:/Users/julie/Documents/Interactive Fiction/1dt1/public/story/one-day.lor\")",
+      "Bash(npx tsc *)",
+      "Bash(node verify-loreline.mjs)",
+      "WebFetch(domain:docs.plasmic.app)",
+      "Bash(xargs -I{} echo {})",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\")",
+      "PowerShell(Stop-Process -Id 37524,37068,37992,31000,37784,35652,20988,37304 -Force -ErrorAction SilentlyContinue)",
+      "Bash(nohup npx vite preview --port 4173)",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"vite preview\")",
+      "Bash(node scripts/make-placeholder-audio.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(ls -la \"/c/Users/julie/AppData/Local/Temp/\" | grep -i -E \"monaspace|literata\")",
+      "Bash(cp \"/c/Users/julie/AppData/Local/Temp/Literata[opsz,wght].ttf\" \"/c/Users/julie/Documents/Interactive Fiction/1dt1/public/fonts/Literata-Variable.ttf\")",
+      "Bash(cp \"/c/Users/julie/AppData/Local/Temp/Literata-Italic[opsz,wght].ttf\" \"/c/Users/julie/Documents/Interactive Fiction/1dt1/public/fonts/Literata-Italic-Variable.ttf\")",
+      "Bash(cp \"/c/Users/julie/AppData/Local/Temp/MonaspaceArgonVarVF[wght,wdth,slnt].ttf\" \"/c/Users/julie/Documents/Interactive Fiction/1dt1/public/fonts/MonaspaceArgon-Variable.ttf\")",
+      "Bash(find \"C:/Users/julie/AppData/Local/Temp\" -iname \"*xenon*\" 2>/dev/null)",
+      "Bash(rm \"C:/Users/julie/AppData/Local/Temp/MonaspaceXenonVarVF[wght,wdth,slnt].ttf\" && echo done)"
+    ]
+  }
+}

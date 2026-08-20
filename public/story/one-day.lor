@@ -1,0 +1,1191 @@
+// ============================================================
+// ONE DAY — Vollstaendiges Skript (alle Kapitel)
+// Siehe one-day-variablenmodell.md fuer die Variablenspezifikation
+// ============================================================
+
+state
+  glukose: 8.4
+  trend: rising
+  insulinOnBoard: 0
+  basalAktiv: false
+  stressLevel: 10
+  bewegungAktiv: false
+  uhrzeit: "04:00"
+  pfadMorgen: ""
+  gerannt: false
+  frueshtueckswahl: ""
+  bolusTiming: ""
+  oeffentlichSpritzen: ""
+  kohlenhydratSchaetzung: ""
+  abendessenWahl: ""
+  persona: ""
+  playerName: ""
+  anfangsEinschaetzung: ""
+
+character chef
+  name: "Chef"
+
+character robin
+  name: "Robin"
+
+// Balu = die Stimme des Koerpers (Blutzucker). Farbe ist FIX (Aareblau/Petrol),
+// unabhaengig davon, was er sagt. Der Host stellt ihm immer einen roten
+// Tropfen voran (🩸), unabhaengig vom Mood-System (das hat nur Lumi).
+character balu
+  name: "Balu"
+  color: "#1E4548"
+
+// Lumi = die Emotion/Laune. Farbe UND Emoji wechseln pro Zeile ueber das
+// mood_*-Tag (siehe Blueprint-Dokument fuer die vollstaendige Farbtabelle).
+// Der Host stellt ihr immer einen Stern voran (⭐), gefaerbt in der Farbe
+// des aktuellen mood_*-Tags.
+character lumi
+  name: "Lumi"
+
+// Schnittstellen zur React-App / Audio-Engine.
+// Eine "function"-Deklaration OHNE eingerueckten Koerper gilt in Loreline
+// automatisch als extern und wird von der Host-App implementiert.
+// Wichtig fuer den JS-Adapter: alle Argumente kommen als EIN Array an,
+// z. B. playSound(interpreter, args) mit args = ["glucose_alarm"].
+function playSound(name, caption)
+function playAmbience(name, loop, caption)
+function applyEffect(type, magnitude, delaySeconds)
+function setCurve(value, trend, zeit)
+function logDecision(id)
+function pauseBeat(seconds)
+function revealDayCurve()
+function offerShare()
+function unlockKnowledge(id, title, text)
+
+// ------------------------------------------------------------
+// KAPITEL 0 — Willkommen
+// ------------------------------------------------------------
+
+beat Open
+  Bist du bereit für einen Perspektivenwechsel?
+  choice
+    Ich bin bereit.
+      -> Szenenwechsel
+
+    Nein lieber nicht.
+      Oh.
+      pauseBeat(1)
+      Alles klar.
+      pauseBeat(2)
+      ...
+      pauseBeat(1)
+      Macht es dich nicht neugierig, wie es wäre, die Funktionen eines deiner Organe zu übernehmen?
+      pauseBeat(1)
+      choice
+        Doch, wenn du es so sagst!
+          -> Szenenwechsel
+
+        Nein, ich bleibe lieber in meiner Komfortzone.
+          Alles klar. Dann bis zum nächsten Mal.
+          -> Ende
+
+beat Szenenwechsel
+  Super! Auf geht's.
+  pauseBeat(1)
+  -> Willkommen
+
+beat Willkommen
+  Ich bin Alex.
+  pauseBeat(1)
+  Seit einem Jahr lebe ich mit Typ 1 Diabetes.
+  pauseBeat(1)
+  Heute bist du ich.
+  pauseBeat(1)
+  Ich übergebe dir das Zepter.
+  pauseBeat(1)
+  Du wirst Entscheidungen treffen, die den Verlauf deiner Blutzuckerkurve beeinflussen.
+  pauseBeat(2)
+  <disclaimer> Diese Experience ist ein experimentelles Lernformat und kein Ersatz für medizinische Beratung oder ärztliche Behandlung.
+  pauseBeat(2)
+  choice
+    Ich habe verstanden.
+      -> DisclaimerBestaetigt
+
+beat DisclaimerBestaetigt
+  Bevor wir anfangen Alex, eine Frage...
+  pauseBeat(2)
+  Was denkst du wie gut wirst du abschneiden?
+  pauseBeat(1)
+  -> Einschaetzung
+
+beat Einschaetzung
+  choice
+    Ich bin zuversichtlich dass ich das gut hinkriege.
+      anfangsEinschaetzung := zuversichtlich
+      -> EinschaetzungBestaetigt
+
+    Hmm, ich weiss nicht...
+      anfangsEinschaetzung := unsicher
+      -> EinschaetzungBestaetigt
+
+    Das tönt kompliziert, ich glaube nicht so gut.
+      anfangsEinschaetzung := kompliziert
+      -> EinschaetzungBestaetigt
+
+    - <first_knowledge>❓ Was ist Diabetes??
+        unlockKnowledge("diabetes", "Was ist Diabetes?", "Diabetes bedeutet, dass der Körper den Blutzuckerspiegel nicht mehr von selbst regulieren kann. Bei Typ 1 stellt die Bauchspeicheldrüse kein Insulin mehr her, deshalb muss es mehrmals täglich von aussen zugeführt werden. Früher nannte man ihn auch jugendlichen Diabetes, da die Autoimmunerkrankung meistens im Kindes- oder Jugendalter diagnostiziert wird. Typ 2 entsteht meist schleichend im Erwachsenenalter. Insulin ist da, aber die Zellen reagieren kaum noch darauf. Er kann in vielen Fällen durch Lebensstiländerungen und mit anderen Medikamenten positiv beeinflusst werden, deshalb wird nicht immer Insulin benötigt.")
+
+        Diabetes bedeutet, dass der Körper den Blutzuckerspiegel nicht mehr von selbst regulieren kann.
+        pauseBeat(2)
+        Bei Typ 1 stellt die Bauchspeicheldrüse kein Insulin mehr her, deshalb muss es mehrmals täglich von aussen zugeführt werden.
+        pauseBeat(2)
+        Wenn du mehr dazu wissen möchtest, kannst du auf 💡 in der Statusleiste klicken.
+        Im Verlauf des heutigen Tages landen alle aha-Momente in deiner Statusleiste.  Du kannst sie jederzeit wieder aufrufen.
+        pauseBeat(2)
+        So, was denkst du wie gut wirst du abschneiden?
+        -> Einschaetzung
+
+beat EinschaetzungBestaetigt
+  Merk dir kurz deine Antwort. Wir kommen am Ende darauf zurück.
+  Was trifft am ehesten auf dich zu?
+  choice
+    Ich lebe mit Typ 1 oder insulinpflichtigem Diabetes.
+      persona := typ1
+      -> WillkommenTyp1
+
+    Ich lebe mit Diabetes, nehme aber kein Insulin.
+      persona := diabetesOhneInsulin
+      -> WillkommenOhneInsulin
+
+    Ich lebe nicht mit Diabetes.
+      persona := keinDiabetes
+      -> WillkommenKeinDiabetes
+
+beat WillkommenTyp1
+  Du bist einer von  ~9 Millionen Menschen weltweit, die mit Typ-1-Diabetes leben.
+  Gemeinsam sind wir etwa die Bevölkerung der Schweiz! (Tendenz steigend, Stand 2025)
+  pauseBeat(1)
+  Schön bist du da.
+  pauseBeat(1)
+  Es kommen dir vermutlich einige der Situationen bekannt vor.
+  pauseBeat(1)
+  Das Ziel dieser kleinen Experience ist es, Menschen ohne Diabetes einen Einblick in unseren Alltag zu geben.
+  pauseBeat(1)
+  Dass der Blutzucker nicht nur ein Wert ist, sondern ein lebendiger Verlauf, der sich ständig verändert.
+  pauseBeat(2)
+  Es ist schwierig zu erklären, wie es sich anfühlt, mit Diabetes zu leben.
+  pauseBeat(1)
+  Der Alltag jeder Person ist anders. Jeder Tag bietet neue Überraschungen.
+  pauseBeat(1)
+  Aber vielleicht erkennst du dich in einigen Situationen wieder.
+  pauseBeat(1)
+  Sollen wir starten?
+  pauseBeat(1)
+  choice
+    Los geht's!
+      -> Alarm
+
+beat WillkommenOhneInsulin
+  Toll bist du hier!
+  pauseBeat(1)
+  Da du selbst mit Diabetes lebst, kennst du die Auswirkungen, die eine chronische Kondition auf den Alltag haben kann.
+  pauseBeat(1)
+  Diese Auswirkungen sind nicht immer sichtbar, und manchmal auch für einen selbst nicht offensichtlich.
+  pauseBeat(1)
+  Aber sie sind da.
+  pauseBeat(1)
+  Gleich lebst du für einen Tag mit Typ 1 Diabetes und erlebst, wie sich der Alltag dadurch verändert.
+  pauseBeat(1)
+  Bist du bereit?
+  choice
+    Los geht's!
+      -> Alarm
+
+beat WillkommenKeinDiabetes
+  Merci für deine Neugier!
+  Gleich lebst du für einen Tag mit Typ 1 Diabetes und erlebst, wie sich der Alltag dadurch verändert.
+  pauseBeat(1)
+  Vielleicht kennst du das auch von anderen chronischen Konditionen.
+  pauseBeat(1)
+  Es kommt eine weitere unsichtbare Ebene dazu.
+  pauseBeat(1)
+  Das ist schwierig zu erklären...
+  pauseBeat(2)
+  Am besten zeige ich es dir. Bist du bereit?
+  choice
+    Los geht's!
+      -> Alarm
+
+
+// ------------------------------------------------------------
+// KAPITEL 1 — Nacht, 04:00 Uhr
+// ------------------------------------------------------------
+
+beat Alarm
+  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
+  playSound("glucose_alarm", "Glukosealarm ertönt")
+
+  Ein schriller Alarm reisst dich aus dem Schlaf.
+
+  pauseBeat(1)
+  Es ist dunkel. Du blinzelst auf dein Handy.
+  pauseBeat(1)
+
+  $uhrzeit Uhr.
+
+  setCurve(glukose, trend, uhrzeit)
+
+  Oben auf dem Bildschirm siehst du deinen Glukosewert.
+  Er liegt leicht über dem Zielbereich für die Nacht. Trend: steigend.
+  pauseBeat(1)
+
+  balu: $glukose mmol/l. Steigend.
+
+  pauseBeat(1)
+
+  lumi: <mood_muede> Och nein... nicht schon wieder.
+
+  pauseBeat(1)
+  Du bist müde. Sehr müde.
+  Dein Handy lässt dich beinahe erblinden.
+  pauseBeat(1)
+  Eigentlich möchtest du einfach weiterschlafen.
+  Der hohe Wert ist allerdings noch da.
+  pauseBeat(1)
+  Was machst du?
+  pauseBeat(1)
+  -> KorrekturEntscheidung
+
+
+beat KorrekturEntscheidung
+  choice
+    Ich nehme die Korrekturdosis. Dieser Wert ist mir zu hoch.
+      logDecision("kap1_korrigiert")
+      pfadMorgen := A
+      -> KorrekturJa
+
+    Ich ignoriere den Alarm und schlafe vorerst weiter.
+      logDecision("kap1_ignoriert")
+      pfadMorgen := B
+      -> KorrekturNein
+
+beat KorrekturJa
+  playSound("pen_open", "Insulinpen wird geöffnet")
+  playSound("inject", "Injektion")
+
+  Du gibst eine kleine Korrekturdosis.
+
+  pauseBeat(1)
+
+  insulinOnBoard += 0.5
+  applyEffect("bolus_correction", 1.5, 900)
+
+  Der Alarm verstummt. Du drehst dich nochmals um.
+  Langsam wird das Zimmer wieder still.
+
+  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
+
+  pauseBeat(1)
+  Dann schlummerst du wieder ein.
+  pauseBeat(1)
+  ...zzzZZZzzz...
+  pauseBeat(3)
+  -> Morgen
+
+
+beat KorrekturNein
+  Nicht jetzt.
+  pauseBeat(1)
+  Wenn du bei 9mmol bist korrigierst du dann.
+  pauseBeat(1)
+  Du legst das Handy wieder weg.
+
+  playSound("alarm_dismiss", "Alarm wird stummgeschaltet")
+
+  applyEffect("dawn_phenomenon", 2, 0)
+
+  <tag_sleepy> Der Alarm verstummt. Du drehst dich nochmals um.
+  Langsam wird das Zimmer wieder still und du schlummerst wieder ein.
+
+  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
+
+  pauseBeat(1)
+  ...zzzZZZzzz...
+  pauseBeat(3)
+  -> Morgen
+
+
+// ------------------------------------------------------------
+// KAPITEL 2 — Morgen, 06:30 Uhr
+// ------------------------------------------------------------
+
+beat Morgen
+  uhrzeit := "06:30"
+  playSound("alarm_clock", "Wecker klingelt")
+  playAmbience("birds_outside", true, "Vögel zwitschern draussen")
+
+  Der Wecker klingelt.
+  pauseBeat(2)
+
+  if pfadMorgen == "A"
+    -> MorgenPfadA
+  else
+    -> MorgenPfadB
+
+
+beat MorgenPfadA
+  Du öffnest langsam die Augen.
+  pauseBeat(2)
+  Zuerst greifst du automatisch nach deinem Basalinsulin.
+
+  -> Basalinsulin
+
+
+beat MorgenPfadB
+  Du fühlst dich schwer. Dein Mund ist trocken. Du hast Durst.
+  pauseBeat(2)
+  Zuerst greifst du automatisch nach deinem Basalinsulin.
+
+  -> Basalinsulin
+
+
+beat Basalinsulin
+  playSound("pen_open", "Insulinpen wird geöffnet")
+  playSound("inject", "Injektion")
+
+  pauseBeat(2)
+  Du gibst deine tägliche Dosis. Es gehört zur Routine.
+
+  basalAktiv = true
+  insulinOnBoard += 1
+  applyEffect("basal", 1, 4800)
+
+  pendingKnowledgeId = "insulin_arten"
+  pendingKnowledgeTitle = "Basalinsulin vs. Bolusinsulin"
+  pendingKnowledgeText = "Es gibt verschiedene Arten von Insulin. Basalinsulin wirkt langsam über viele Stunden und deckt den Grundbedarf des Körpers. Bolusinsulin wird zu Mahlzeiten oder zur Korrektur hoher Werte verwendet."
+
+  -> BasalinsulinWissen
+
+
+beat BasalinsulinWissen
+  choice
+    - ❓ Mehr erfahren
+        <knowledge> $pendingKnowledgeText
+        unlockKnowledge(pendingKnowledgeId, pendingKnowledgeTitle, pendingKnowledgeText)
+        -> BasalinsulinWissen
+
+    ➡️ Weiter
+      -> BasalinsulinWeiter
+
+
+beat BasalinsulinWeiter
+
+  pauseBeat(3)
+  Dann legst du den Pen wieder auf den Nachttisch.
+  pauseBeat(2)
+
+  if pfadMorgen == "A"
+    Jetzt schaust du auf dein Handy.
+
+    setCurve(6.4, "stable", uhrzeit)
+
+    pauseBeat(2)
+    Die Kurve sieht ruhig aus.
+    pauseBeat(1)
+    Du fühlst dich erstaunlich erholt. Ein guter Start.
+    pauseBeat(2)
+
+    balu: Ich bin stabil.
+  else
+    Noch bevor du richtig wach bist, greifst du nach deinem Handy.
+
+    setCurve(13.8, "rising", uhrzeit)
+
+    pauseBeat(2)
+    Du verziehst kurz das Gesicht.
+    pauseBeat(1)
+    Du kennst auch den Übeltäter:
+    pauseBeat(2)
+    Die grosse Portion Pasta von gestern Abend.
+    pauseBeat(1)
+    Und deinen klassischen morgendlichen Anstieg.
+    pauseBeat(2)
+
+    lumi: <mood_frust> So möchte ich eigentlich nicht in den Tag starten.
+
+    -> MorgenResistenzWissen
+
+  -> Badezimmer
+
+
+beat MorgenResistenzWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("morgen_resistenz", "Warum Morgen anders sind", "Der Insulinbedarf ist morgens oft höher als später am Tag. Hormone kurz vor dem Aufwachen machen viele Menschen vorübergehend insulinresistenter. Deshalb können zwei identische Frühstücke an unterschiedlichen Tagen völlig unterschiedliche Glukoseverläufe verursachen.")
+
+        <knowledge>
+        Der Insulinbedarf ist morgens oft höher als später am Tag.
+        pauseBeat(2)
+        Hormone kurz vor dem Aufwachen machen viele Menschen vorübergehend insulinresistenter.
+        pauseBeat(2)
+        Deshalb können zwei identische Frühstücke an unterschiedlichen Tagen völlig unterschiedliche Glukoseverläufe verursachen.
+
+        pauseBeat(1)
+
+        -> MorgenResistenzWissen
+
+    ➡️ Weiter
+      -> Badezimmer
+
+
+beat Badezimmer
+  playSound("bathroom_door", "Badezimmertür öffnet sich")
+  playSound("faucet_water", "Wasserhahn läuft")
+
+  Jetzt wird erstmal geduscht.
+
+  if pfadMorgen == "A"
+    pauseBeat(1)
+    Du stellst dich unters Wasser. Der Wert von vorhin ist schon in Ordnung.
+  else
+    pauseBeat(1)
+    Zuvr gibst du aber eine kleine Korrekturdosis, dann stellst du dich unters Wasser.
+    pauseBeat(2)
+    Wer weiss, vielleicht wirkt das Insulin ja schneller unter warmem Wasser.
+
+    setCurve(glukose, "falling", uhrzeit)
+
+  -> Fruehstueck
+
+
+// ------------------------------------------------------------
+// KAPITEL 2 (Forts.) — Fruehstueck & Zeitdruck
+// ------------------------------------------------------------
+
+beat Fruehstueck
+  playSound("fridge_open", "Kühlschrank wird geöffnet")
+
+  Du öffnest den Kühlschrank. Heute hast du drei Möglichkeiten.
+
+  choice
+    Müsli mit Beeren
+      frueshtueckswahl := muesli
+      -> Zeitdruck
+
+    Rührei mit Vollkornbrot
+      frueshtueckswahl := ruehrei
+      -> Zeitdruck
+
+    Kaffee und Gipfeli to go
+      frueshtueckswahl := gipfeli
+      -> Zeitdruck
+
+    ❓ Was beeinflusst die Kurve noch?
+      -> FruehstueckWissen
+
+
+beat FruehstueckWissen
+  unlockKnowledge("naehrstoffe_kurve", "Was die Kurve noch beeinflusst", "Nicht nur Kohlenhydrate wirken sich auf die Glukosekurve aus. Auch Proteine und Fette beeinflussen den Verlauf, meist langsamer und über einen längeren Zeitraum als reine Kohlenhydrate.")
+
+  <knowledge>
+  Nicht nur Kohlenhydrate wirken sich auf die Glukosekurve aus. Auch
+  Proteine und Fette beeinflussen den Verlauf, meist langsamer und
+  über einen längeren Zeitraum als reine Kohlenhydrate.
+
+  pauseBeat(3)
+
+  Jetzt nochmal die Wahl von eben.
+
+  -> FruehstueckNochmal
+
+
+beat FruehstueckNochmal
+  choice
+    Müsli mit Beeren
+      frueshtueckswahl := muesli
+      -> Zeitdruck
+
+    Rührei mit Vollkornbrot
+      frueshtueckswahl := ruehrei
+      -> Zeitdruck
+
+    Kaffee und Gipfeli to go
+      frueshtueckswahl := gipfeli
+      -> Zeitdruck
+
+
+beat Zeitdruck
+  Plötzlich fällt dein Blick auf die Uhr.
+
+  uhrzeit := "07:18"
+  $uhrzeit Uhr. Der Zug fährt gleich.
+
+  <tag_surprised> "Oh nein."
+
+  choice
+    Rennen.
+      gerannt = true
+      logDecision("kap2_rennen")
+      -> Bahnhof
+
+    Den nächsten Zug nehmen.
+      gerannt = false
+      logDecision("kap2_gemuetlich")
+      -> Bahnhof
+
+
+beat Bahnhof
+  if gerannt
+    -> BahnhofGerannt
+  else
+    -> BahnhofGemuetlich
+
+
+beat BahnhofGerannt
+  if frueshtueckswahl == "gipfeli"
+    Keine Zeit mehr fürs Gipfeli. Du spritzt schnell dein Basalinsulin nach,
+    ziehst dich an. Los!
+  else
+    Du spritzt schnell, isst im Stehen die letzten Bissen, ziehst dich an. Los!
+    insulinOnBoard += 3
+    applyEffect("bolus_meal", 3, 900)
+
+  playSound("footsteps_running", "Schnelle Schritte, du rennst")
+  playSound("train_doors_close", "Zugtüren schliessen")
+  bewegungAktiv = true
+  applyEffect("bewegung_rennen", 2.5, 1200)
+
+  Die Türen schliessen sich. Geschafft.
+  Du atmest tief durch. Du setzt dich.
+
+  Langsam wandert dein Blick nach oben. Die Kurve verändert sich.
+
+  if frueshtueckswahl == "muesli"
+    setCurve(9.8, "rising", uhrzeit)
+    Erst steigt sie. Dann fällt sie plötzlich schnell.
+    setCurve(6.2, "falling", uhrzeit)
+  else if frueshtueckswahl == "ruehrei"
+    setCurve(7.8, "rising", uhrzeit)
+    Nur ein kleiner Anstieg. Dann beginnt sie zu fallen.
+    setCurve(6.0, "falling", uhrzeit)
+  else
+    setCurve(8, "rising", uhrzeit)
+    Sie steigt leicht durchs Rennen.
+
+  War das das Rennen? Oder wirkt jetzt das Insulin?
+
+  balu: Whoa... das war gerade etwas viel.
+
+  choice
+    Das Rennen.
+      logDecision("kap2_deutung_rennen")
+
+    Das Insulin.
+      logDecision("kap2_deutung_insulin")
+
+    Beides zusammen.
+      logDecision("kap2_deutung_beides")
+
+    Keine Ahnung, ehrlich gesagt.
+      logDecision("kap2_deutung_unsicher")
+
+  -> BewegungWissen
+
+beat BewegungWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("bewegung_aktivitaet", "Wie Bewegung wirkt", "Aktivität beeinflusst den Blutzucker. Je nach Situation kann er dadurch schnell steigen oder fallen.")
+
+        <knowledge>
+        Aktivität beeinflusst den Blutzucker. Je nach Situation kann er dadurch
+        schnell steigen oder fallen.
+
+        pauseBeat(3)
+
+        -> BewegungWissen
+
+    ➡️ Weiter
+      -> Arbeit
+
+
+beat BahnhofGemuetlich
+  Du ziehst dich an, in aller Ruhe.
+
+  playSound("footsteps_calm", "Ruhige Schritte")
+
+  Raus zum Bahnhof. Du setzt dich auf ein Bänkli.
+
+  playSound("pen_open", "Insulinpen wird geöffnet")
+  playSound("inject", "Injektion")
+
+  insulinOnBoard += 3
+  applyEffect("bolus_meal", 3, 900)
+
+  Du spritzt dein Insulin und isst in Ruhe fertig.
+
+  playSound("train_arrival", "Zug fährt ein")
+
+  setCurve(6.6, "stable", uhrzeit)
+
+  Der nächste Zug kommt. Die Kurve bleibt ruhig.
+  Du steigst entspannt ein.
+
+  -> Arbeit
+
+
+// ------------------------------------------------------------
+// KAPITEL 3 — Arbeit
+// ------------------------------------------------------------
+
+beat Arbeit
+  playSound("office_door", "Bürotür öffnet sich")
+  playAmbience("office_ambience", true, "Bürogeräusche im Hintergrund")
+
+  Kaum sitzt du am Arbeitsplatz, öffnet sich die Bürotür.
+
+  if gerannt
+    setCurve(6, "stable", uhrzeit)
+  else
+    setCurve(7, "stable", uhrzeit)
+
+  if gerannt
+    chef: Gut, dass du da bist. Ein Kunde ist spontan hier. Kannst du ihm dein Projekt um 08:30 Uhr präsentieren?
+  else
+    chef: Wo warst du denn? Ein Kunde ist spontan hier. Kannst du ihm dein Projekt um 08:30 Uhr präsentieren?
+
+  lumi: <mood_gestresst> Bitte heute nicht.
+
+  Dein Blick wandert oben nach rechts zur Uhr. Noch zehn Minuten. Die Präsentation läuft.
+
+  Während dessen passiert etwas. Ganz leise. Die Kurve steigt.
+
+  stressLevel += 40
+  applyEffect("stress", 2, 300)
+
+  if gerannt
+    setCurve(10.8, "rising", uhrzeit)
+  else
+    setCurve(11.9, "rising", uhrzeit)
+
+  Und trotzdem steigt sie weiter.
+
+  balu: Hm... ich steige.
+
+  Was, glaubst du, treibt die Kurve gerade nach oben?
+
+  choice
+    Der Stress von der Präsentation.
+      logDecision("kap3_deutung_stress")
+
+    Das Frühstück wirkt jetzt erst richtig.
+      logDecision("kap3_deutung_fruehstueck")
+
+    Das Rennen von vorhin, verzögert. if gerannt
+      logDecision("kap3_deutung_bewegung")
+
+    Keine Ahnung, ehrlich gesagt.
+      logDecision("kap3_deutung_unsicher")
+
+  -> StressWissen
+
+beat StressWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("stress_blutzucker", "Wie Stress wirkt", "Oft ist es nicht nur ein Grund. Stress kann den Blutzucker erhöhen. Hormone wie Cortisol und Adrenalin sorgen dafür, dass die Leber Glukose freisetzt. Das ist eine normale Reaktion des Körpers.")
+
+        <knowledge>
+        Oft ist es nicht nur ein Grund. Stress kann den Blutzucker erhöhen.
+        Hormone wie Cortisol und Adrenalin sorgen dafür, dass die Leber
+        Glukose freisetzt. Das ist eine normale Reaktion des Körpers.
+
+        pauseBeat(3)
+
+        -> StressWissen
+
+    ➡️ Weiter
+      -> ArbeitAbschluss
+
+
+beat ArbeitAbschluss
+  Die Präsentation ist vorbei. Der Kunde bedankt sich kurz.
+  Sein Gesicht verrät nicht viel.
+
+  "Wir melden uns." Mehr sagt er nicht. Dann ist er wieder weg.
+
+  Du weisst nicht, ob das gut oder schlecht war.
+
+  -> Mittag
+
+
+// ------------------------------------------------------------
+// KAPITEL 4 — Mittag
+// ------------------------------------------------------------
+
+beat Mittag
+  playSound("cafeteria_door", "Kantinentür öffnet sich")
+  playAmbience("cafeteria_ambience", true, "Stimmen und Geschirr in der Kantine")
+
+  Die Anspannung der Präsentation sitzt dir noch etwas in den Schultern.
+
+  robin: Kommst du mit in die Kantine?
+
+  Heute gibt es wieder das Standardmenü. Zum Glück kennst du es bereits.
+  Du weisst ungefähr, wie viele Kohlenhydrate enthalten sind.
+
+  applyEffect("kohlenhydrate_mahlzeit", 3, 900)
+
+  choice
+    Am Tisch.
+      oeffentlichSpritzen := tisch
+      logDecision("kap4_tisch")
+      playSound("pen_open", "Insulinpen wird geöffnet")
+      playSound("inject", "Injektion")
+
+      robin: Darf ich fragen, was du da machst?
+
+      choice
+        Kurze Erklärung.
+          logDecision("kap4_erklaerung_kurz")
+          Du erklärst es kurz. Ein bisschen unangenehm ist es dir schon.
+
+        Enthusiastische Erklärung.
+          logDecision("kap4_erklaerung_enthusiastisch")
+          Du erzählst gerne davon.
+
+          lumi: <mood_stolz> Kein Grund, sich dafür zu verstecken.
+
+    Noch kurz am Arbeitsplatz.
+      oeffentlichSpritzen := arbeitsplatz
+      logDecision("kap4_arbeitsplatz")
+      playSound("pen_open", "Insulinpen wird geöffnet")
+      playSound("inject", "Injektion")
+
+  -> SpritzenWissen
+
+beat SpritzenWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("oeffentlich_spritzen", "Spritzen in der Öffentlichkeit", "Viele Menschen mit Typ-1-Diabetes fühlen sich besonders kurz nach der Diagnose unsicher, in der Öffentlichkeit Insulin zu spritzen. Manche beantworten Fragen gerne. Andere möchten diesen Moment lieber für sich behalten. Beides ist völlig in Ordnung.")
+
+        <knowledge>
+        Viele Menschen mit Typ-1-Diabetes fühlen sich besonders kurz nach der
+        Diagnose unsicher, in der Öffentlichkeit Insulin zu spritzen. Manche
+        beantworten Fragen gerne. Andere möchten diesen Moment lieber für
+        sich behalten. Beides ist völlig in Ordnung.
+
+        pauseBeat(3)
+
+        -> SpritzenWissen
+
+    ➡️ Weiter
+      -> Nachmittag
+
+
+// ------------------------------------------------------------
+// KAPITEL 5 — Nachmittag
+// ------------------------------------------------------------
+
+beat Nachmittag
+  Zurück am Arbeitsplatz sinkt dein Blutzucker langsam wieder. Er pendelt
+  sich schön ein. Endlich kannst du an deinem Hauptprojekt weiterarbeiten.
+
+  uhrzeit := "15:30"
+  $uhrzeit Uhr. Langsam meldet sich der Hunger.
+
+  setCurve(4.4, "falling", uhrzeit)
+
+  balu: Hey.
+
+  Du ignorierst ihn. Du bist im Flow.
+
+  pauseBeat(2)
+
+  setCurve(4.1, "falling", uhrzeit)
+
+  balu: Hey!
+
+  lumi: <mood_hungrig> Ich habe langsam Hunger...
+
+  Ja gleich, sagst du.
+
+  pauseBeat(2)
+
+  setCurve(3.8, "falling", uhrzeit)
+
+  balu: HEY! Ich rede mit dir!
+
+  playSound("glucose_alarm", "Glukosealarm ertönt")
+
+  Jetzt erst schaust du hin.
+
+  Ein kleiner Apfel. Schnell.
+
+  Genervt isst du ihn. Konzentrieren konntest du dich sowieso schon
+  eine Weile nicht mehr richtig.
+
+  applyEffect("traubenzucker", 2, 300)
+
+  playSound("teams_notification", "Teams-Nachricht kommt an")
+
+  Beim Knabbern kommt eine Teams-Nachricht von Robin rein.
+
+  robin: Schon was vom Kunden gehört?
+
+  "Nein."
+
+  robin: Kommst du heute Abend spontan Apéro? Wir gehen am Feierabend los.
+
+  Du überlegst kurz. Dann lächelst du.
+
+  "Ja klar! Bin dabei."
+
+  -> HypoWissen
+
+beat HypoWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("hypo_anzeichen", "Wie sich Unterzucker ankündigt", "Eine Unterzuckerung kündigt sich oft leise an: Konzentrationsschwierigkeiten, Zittern, Schwitzen oder plötzlicher Heisshunger können erste Anzeichen sein. Wer gerade sehr beschäftigt ist, übersieht diese Signale leicht.")
+
+        <knowledge>
+        Eine Unterzuckerung kündigt sich oft leise an: Konzentrationsschwierigkeiten,
+        Zittern, Schwitzen oder plötzlicher Heisshunger können erste Anzeichen sein.
+        Wer gerade sehr beschäftigt ist, übersieht diese Signale leicht.
+
+        pauseBeat(3)
+
+        -> HypoWissen
+
+    ➡️ Weiter
+      -> NachmittagAbschluss
+
+
+beat NachmittagAbschluss
+  Der Nachmittag zieht sich. Dann, kurz vor Feierabend:
+
+  uhrzeit := "17:45"
+  $uhrzeit Uhr.
+
+  Du klappst den Laptop zu. Feierabend.
+
+  -> Apero
+
+
+// ------------------------------------------------------------
+// KAPITEL 6 — Apero
+// ------------------------------------------------------------
+
+beat Apero
+  playAmbience("restaurant_ambience", true, "Gespräche und Gläser im Hintergrund")
+
+  Auf dem Tisch stehen Chips, Käse, Brot, Nüsse. Ein Glas Prosecco.
+  Du kennst die Kohlenhydratmenge nicht genau.
+
+  choice
+    Lieber vorsichtig schätzen.
+      kohlenhydratSchaetzung := vorsichtig
+      logDecision("kap6_vorsichtig")
+      applyEffect("kohlenhydrate_mahlzeit", 1.5, 900)
+
+    So genau wie möglich schätzen.
+      kohlenhydratSchaetzung := genau
+      logDecision("kap6_genau")
+      applyEffect("kohlenhydrate_mahlzeit", 2.5, 900)
+
+  -> SchaetzenWissen
+
+beat SchaetzenWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("kohlenhydrate_schaetzen", "Kohlenhydrate schätzen", "Viele Menschen mit Typ-1-Diabetes nutzen Apps, die Mahlzeiten fotografieren und beim Abschätzen der Kohlenhydrate helfen. Sie können unterstützen, ersetzen aber nie die eigene Erfahrung.")
+
+        <knowledge>
+        Viele Menschen mit Typ-1-Diabetes nutzen Apps, die Mahlzeiten fotografieren
+        und beim Abschätzen der Kohlenhydrate helfen. Sie können unterstützen,
+        ersetzen aber nie die eigene Erfahrung.
+
+        pauseBeat(3)
+
+        -> SchaetzenWissen
+
+    ➡️ Weiter
+      -> AperoWeiter
+
+
+beat AperoWeiter
+  if kohlenhydratSchaetzung == "vorsichtig"
+    -> AperoErgebnisA
+  else
+    -> AperoErgebnisB
+
+
+beat AperoErgebnisA
+  Du hast vorsichtig geschätzt. Später zu Hause zeigt die Kurve einen
+  erhöhten Wert.
+
+  setCurve(11.8, "rising", uhrzeit)
+
+  "Hm. Vielleicht hätte ich etwas mehr Insulin geben können. Ist okay.
+  Ich korrigiere jetzt."
+
+  lumi: <mood_zuversichtlich> Ist okay. Wir kriegen das hin.
+
+  applyEffect("bolus_correction", 1.5, 900)
+
+  -> Zuhause
+
+
+beat AperoErgebnisB
+  Du hast möglichst genau geschätzt. Die Kurve bleibt ruhig. Oder sie
+  weicht trotzdem leicht ab. Nicht alles lässt sich perfekt berechnen.
+
+  -> UnvorhersehbarkeitWissen
+
+beat UnvorhersehbarkeitWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("unvorhersehbarkeit", "Warum nichts perfekt planbar ist", "Auch mit Erfahrung gibt es keine perfekten Glukoseverläufe. Viele Faktoren wirken gleichzeitig.")
+
+        <knowledge>
+        Auch mit Erfahrung gibt es keine perfekten Glukoseverläufe. Viele
+        Faktoren wirken gleichzeitig.
+
+        pauseBeat(3)
+
+        -> UnvorhersehbarkeitWissen
+
+    ➡️ Weiter
+      -> Zuhause
+
+
+// ------------------------------------------------------------
+// KAPITEL 7 — Zuhause
+// ------------------------------------------------------------
+
+beat Zuhause
+  Was für ein Tag.
+
+  playSound("front_door", "Haustür fällt ins Schloss")
+  uhrzeit := "19:00"
+
+  playSound("whatsapp_notification", "WhatsApp-Nachricht kommt an")
+
+  chef: Kunde ist begeistert! Nächste Woche Detailkonzept!
+
+  Du lächelst.
+
+  lumi: <mood_gluecklich> Geschafft!
+
+  Der Tag war lang. Du öffnest den Kühlschrank. Heute hast du Lust auf ...
+
+  choice
+    Etwas Ausgewogenes kochen
+      abendessenWahl := kochen
+      playSound("cooking_pan", "Pfanne auf dem Herd")
+      applyEffect("kohlenhydrate_mahlzeit", 2, 1200)
+
+      Gemüse aus dem Ofen zu gebackenem Feta. Dazu ein kleines
+      Schoggimousse zum Dessert.
+
+    Etwas Schnelles
+      abendessenWahl := schnelles
+      applyEffect("kohlenhydrate_mahlzeit", 2, 900)
+
+      Pasta von gestern, dazu etwas mehr Salat und ein bisschen weniger
+      Pasta als sonst. Vielleicht steigt der Zucker dadurch etwas weniger.
+
+    Essen bestellen
+      abendessenWahl := bestellen
+      playSound("doorbell", "Türklingel")
+      applyEffect("kohlenhydrate_mahlzeit", 3, 900)
+
+      Tacos.
+
+  playSound("pen_open", "Insulinpen wird geöffnet")
+  playSound("inject", "Injektion")
+  Piks.
+
+  "Autsch." Nur kurz. Dann verschwindet das Gefühl wieder.
+
+  insulinOnBoard += 2
+
+  -> SchmerzWissen
+
+beat SchmerzWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("spritzen_schmerz", "Tut Spritzen weh?", "Insulin zu spritzen ist meistens kaum schmerzhaft. Manchmal kann ein Einstich aber kurz zwicken. Je nach Land werden unterschiedliche Systeme genutzt, etwa Pens, Pumpen oder Einwegspritzen. Nicht überall auf der Welt stehen dieselben Therapien zur Verfügung.")
+
+        <knowledge>
+        Insulin zu spritzen ist meistens kaum schmerzhaft. Manchmal kann ein
+        Einstich aber kurz zwicken. Je nach Land werden unterschiedliche Systeme
+        genutzt, etwa Pens, Pumpen oder Einwegspritzen. Nicht überall auf der
+        Welt stehen dieselben Therapien zur Verfügung.
+
+        pauseBeat(3)
+
+        -> SchmerzWissen
+
+    ➡️ Weiter
+      -> DecisionFatigueWissen
+
+
+beat DecisionFatigueWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("decision_fatigue", "Decision Fatigue", "Menschen mit Typ-1-Diabetes treffen täglich dutzende gesundheitsbezogene Entscheidungen. Mit jedem weiteren Entscheid kann die sogenannte Decision Fatigue zunehmen. Nicht jede Entscheidung fällt am Abend gleich leicht wie am Morgen.")
+
+        <knowledge>
+        Menschen mit Typ-1-Diabetes treffen täglich dutzende gesundheitsbezogene
+        Entscheidungen. Mit jedem weiteren Entscheid kann die sogenannte Decision
+        Fatigue zunehmen. Nicht jede Entscheidung fällt am Abend gleich leicht
+        wie am Morgen.
+
+        pauseBeat(3)
+
+        -> DecisionFatigueWissen
+
+    ➡️ Weiter
+      -> Spaziergang
+
+
+// ------------------------------------------------------------
+// KAPITEL 8 — Spaziergang & Abschluss
+// ------------------------------------------------------------
+
+beat Spaziergang
+  Nach dem Essen schaust du nochmals auf dein Handy. Der Wert ist etwas
+  höher als erwartet.
+
+  Du ziehst deine Schuhe an. Die Haustür fällt ins Schloss.
+
+  playSound("front_door", "Haustür fällt ins Schloss")
+  playAmbience("evening_walk", true, "Abendliche Geräusche draussen")
+
+  Man hört nur deine Schritte.
+
+  playSound("footsteps_calm", "Ruhige Schritte")
+
+  bewegungAktiv = true
+  applyEffect("bewegung_spaziergang", 1.5, 900)
+
+  Langsam beginnt die Kurve zu sinken.
+
+  lumi: <mood_entspannt> Das tut gerade gut.
+
+  -> SpaziergangWissen
+
+beat SpaziergangWissen
+  choice
+    - ❓ Mehr erfahren
+        unlockKnowledge("spaziergang_wirkung", "Bewegung nach dem Essen", "Schon ein kurzer Spaziergang nach dem Essen kann helfen, den Glukoseanstieg abzuflachen. Wie stark die Wirkung ist, ist von Mensch zu Mensch verschieden.")
+
+        <knowledge>
+        Schon ein kurzer Spaziergang nach dem Essen kann helfen, den
+        Glukoseanstieg abzuflachen. Wie stark die Wirkung ist, ist von Mensch
+        zu Mensch verschieden.
+
+        pauseBeat(3)
+
+        -> SpaziergangWissen
+
+    ➡️ Weiter
+      -> SpaziergangAbschluss
+
+
+beat SpaziergangAbschluss
+  Der Stress von heute Morgen fällt dir wieder ein.
+
+  Anstrengend war das schon.
+
+  Aber wenn du ehrlich bist: Der Tag war eigentlich ganz okay.
+
+  -> Abschluss
+
+
+beat Abschluss
+  Die Schritte laufen weiter. Der Bildschirm wird ruhiger.
+  Die Glukosekurve stabilisiert sich.
+
+  Und dann war da noch die Sache mit dem Kunden. Der Chef hat sich gemeldet.
+  Erledigt. Ein kleiner Punkt am Rand dieses Tages, mehr nicht.
+
+  playAmbience("evening_walk", false, "Abendgeräusche verklingen")
+
+  Was hat dich heute am meisten überrascht?
+
+  Welche Entscheidung fiel dir am schwersten?
+
+  Was wirst du von diesem Tag mitnehmen?
+
+  pauseBeat(4)
+
+  if persona == "keinDiabetes"
+    Noch eine letzte Frage, bevor du weiterscrollst.
+
+    Wie oft hast du heute an deinen eigenen Blutzucker gedacht?
+
+    pauseBeat(3)
+
+    Vermutlich gar nicht. Das ist ganz normal, wenn ein Körper das
+    einfach von selbst regelt.
+
+    Während du diese Rolle gespielt hast, hast du etwa 25 bis 40
+    Entscheidungen getroffen, die direkt oder indirekt mit Diabetes zu
+    tun hatten.
+
+    Für Menschen mit Typ-1-Diabetes ist das kein Spiel. Das ist heute.
+    Und morgen wieder.
+
+    pauseBeat(3)
+
+  Heute hast du einen Tag mit Typ-1-Diabetes erlebt.
+
+  Nicht perfekt. Nicht aussergewöhnlich. Einfach einen ganz normalen Tag.
+
+  Viele dieser Entscheidungen bleiben für Aussenstehende unsichtbar.
+  Doch sie begleiten jeden einzelnen Tag.
+
+  pauseBeat(3)
+
+  Erinnerst du dich an die Frage vom Anfang?
+
+  if anfangsEinschaetzung == "zuversichtlich"
+    Du hast dich zu Beginn zuversichtlich eingeschätzt.
+  else if anfangsEinschaetzung == "unsicher"
+    Du wusstest zu Beginn nicht so recht, was du davon halten sollst.
+  else
+    Du dachtest zu Beginn, das tönt kompliziert.
+
+  Wie siehst du das jetzt?
+
+  choice
+    Ich glaube, eher gut.
+      -> Kurvenaufloesung
+
+    Ich glaube, eher nicht so gut.
+      -> Kurvenaufloesung
+
+    Keine Ahnung.
+      -> Kurvenaufloesung
+
+
+beat Kurvenaufloesung
+  pauseBeat(2)
+
+  revealDayCurve()
+
+  Hier ist sie. Deine Glukosekurve von heute, von 04:00 Uhr bis jetzt.
+
+  pauseBeat(4)
+
+  Es gibt kein Gut. Es gibt kein Schlecht.
+
+  Es gibt nur: Was der Körper gerade macht, und was du gerade tust.
+
+  pauseBeat(3)
+
+  if playerName != ""
+    Danke, dass du ihn heute mitgegangen bist.
+  else
+    Danke, dass du ihn heute mitgegangen bist.
+
+  Was denkst du jetzt?
+
+  offerShare()
+
+  -> .

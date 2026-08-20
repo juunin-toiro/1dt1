@@ -1,0 +1,142 @@
+.status-bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  font-family: "Monaspace Argon", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Traegt die bestehende Statuszeile links und die Uhrzeit rechts - dieselbe
+   Zeit-Quelle wie die tageszeitabhaengige Mark-Farbe (siehe StoryPlayer.tsx). */
+.status-bar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.status-bar__time {
+  font-size: 0.9rem;
+  color: #a8a79c;
+  letter-spacing: 0.02em;
+}
+
+.status-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border: 1px solid rgba(242, 239, 230, 0.16);
+  border-radius: 999px;
+  background: #1b1e27;
+  width: fit-content;
+}
+
+.status-bar__glucose {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f2efe6;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Balus "Casino-Moment": ein knapper, praeziser Tick bei jedem neuen
+     Messwert (key-Remount pro Wert, siehe StatusBar.tsx) - Ueberschwingen per
+     Easing statt eines echten Ziffern-Rollens, bewusst kurz und mechanisch. */
+  animation: status-bar-glucose-tick 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes status-bar-glucose-tick {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.status-bar__trend {
+  font-weight: 400;
+  color: #a8a79c;
+}
+
+.status-bar__mood {
+  font-size: 1.1rem;
+  display: inline-block;
+  /* Lumis Uebergang ist bewusst weicher/organischer als Balus Tick - Fade +
+     leichtes Aufwachsen statt Scale-Ueberschwingen, spielt nur bei echtem
+     Laune-Wechsel (key-Remount pro mood, siehe StatusBar.tsx). */
+  animation: status-bar-mood-fade 0.5s ease;
+}
+
+@keyframes status-bar-mood-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.status-bar__knowledge-toggle {
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0;
+  color: #f2efe6;
+  /* Spielt bei jeder neuen Wissens-Uebernahme ab (der Button wird per key
+     neu gemountet, siehe StatusBar.tsx) - kurz groesser, kurz leuchten, dann
+     zurueck in den Ruhezustand. */
+  animation: status-bar-knowledge-pop 0.6s ease-out;
+}
+
+@keyframes status-bar-knowledge-pop {
+  0% {
+    transform: scale(1);
+    text-shadow: none;
+  }
+  35% {
+    transform: scale(1.25);
+    text-shadow: 0 0 10px rgba(244, 197, 66, 0.75);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: none;
+  }
+}
+
+/* Zeigt tatsaechlichen Lesetext (die freigeschalteten Fakten), keine
+   Status-Anzeige - bleibt deshalb bei der Lese-Serife statt der Monospace-
+   Schrift des restlichen Status-Bereichs. */
+.status-bar__knowledge-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid rgba(242, 239, 230, 0.16);
+  border-radius: 12px;
+  background: #1b1e27;
+  max-width: 420px;
+  font-family: "Literata", Georgia, "Times New Roman", serif;
+}
+
+.status-bar__knowledge-entry summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #f2efe6;
+}
+
+.status-bar__knowledge-entry p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #a8a79c;
+}
