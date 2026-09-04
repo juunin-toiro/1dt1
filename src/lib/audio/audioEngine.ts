@@ -8,8 +8,10 @@
 //   Ambiences: public/audio/ambience/<name>.mp3
 // Existiert eine solche Datei nicht, greift der Platzhalter automatisch.
 
-const DEFAULT_SOUND_URL = '/audio/click.wav'
-const DEFAULT_AMBIENCE_URL = '/audio/morning-room.wav'
+import { publicUrl } from '../publicUrl'
+
+const DEFAULT_SOUND_URL = publicUrl('audio/click.wav')
+const DEFAULT_AMBIENCE_URL = publicUrl('audio/morning-room.wav')
 
 let audioUnlocked = false
 const pendingActions: Array<() => void> = []
@@ -67,7 +69,7 @@ function playWithFallback(primaryUrl: string, fallbackUrl: string, options: { lo
 
 export function playSound(name: string): void {
   runOrQueue(() => {
-    playWithFallback(`/audio/sfx/${name}.mp3`, DEFAULT_SOUND_URL)
+    playWithFallback(publicUrl(`audio/sfx/${name}.mp3`), DEFAULT_SOUND_URL)
   })
 }
 
@@ -79,7 +81,7 @@ export function playAmbience(name: string, loop = true): void {
     if (currentAmbienceName === name) return
     stopAmbience()
     currentAmbienceName = name
-    currentAmbience = playWithFallback(`/audio/ambience/${name}.mp3`, DEFAULT_AMBIENCE_URL, { loop })
+    currentAmbience = playWithFallback(publicUrl(`audio/ambience/${name}.mp3`), DEFAULT_AMBIENCE_URL, { loop })
   })
 }
 

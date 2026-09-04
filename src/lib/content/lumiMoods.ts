@@ -1,3 +1,5 @@
+import { publicUrl } from '../publicUrl'
+
 // Farbtabelle aus dem LX-Blueprint (Abschnitt 9). Balu ist bewusst fix
 // eingefaerbt, Lumis Farbe/Icon wechselt pro mood_*-Tag.
 // Balus urspruengliches dunkles Petrol (#1E4548) hatte auf dem neuen dunklen
@@ -79,7 +81,7 @@ export const LUMI_MOODS: Record<LumiMoodKey, LumiMoodDefinition> = Object.fromEn
       label: seed.label,
       color: seed.color,
       colorRgb: hexToRgbString(seed.color),
-      iconSrc: `/icons/lumi/${seed.file}.svg`,
+      iconSrc: publicUrl(`icons/lumi/${seed.file}.svg`),
       iconType: 'svg',
       alt: `Lumis Laune: ${seed.label}`,
     }

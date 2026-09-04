@@ -5,7 +5,7 @@ import './lib/plasmic-init'
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/plasmic-host" element={<PlasmicCanvasHost />} />
         <Route path="/*" element={<StoryPlayer />} />

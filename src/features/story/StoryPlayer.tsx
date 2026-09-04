@@ -9,6 +9,7 @@ import {
   type LorelineLine,
 } from '../../lib/loreline/useLoreline'
 import { useStoryStore } from '../../lib/loreline/storyStore'
+import { publicUrl } from '../../lib/publicUrl'
 import { DayCurve } from './DayCurve'
 import { StatusBar } from './StatusBar'
 import { BALU_COLOR, LUMI_MOOD_COLORS, SOCIAL_VOICE_COLORS, isLumiMoodKey } from '../../lib/content/lumiMoods'
@@ -499,7 +500,7 @@ export interface StoryPlayerProps {
 }
 
 export function StoryPlayer({ className }: StoryPlayerProps) {
-  const { line, choices, advance, choose, finished, loading, error } = useLoreline('/story/one-day.lor')
+  const { line, choices, advance, choose, finished, loading, error } = useLoreline(publicUrl('story/one-day.lor'))
 
   const [log, setLog] = useState<LogEntry[]>([])
   const nextIdRef = useRef(0)
