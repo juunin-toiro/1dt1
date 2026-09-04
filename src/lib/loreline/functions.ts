@@ -16,11 +16,13 @@ const HYPO_THRESHOLD = 4
 // pacing.ts) - es merkt nur vor, wie lange useLoreline die naechste Zeile
 // verzoegert anzeigen soll.
 export const lorelineFunctions: Record<string, ExternalFunction> = {
-  playSound: (_interp, [name]) => {
+  playSound: (_interp, [name, caption]) => {
     playSound(String(name))
+    if (caption) useStoryStore.getState().setCaption(String(caption))
   },
-  playAmbience: (_interp, [name, loop]) => {
+  playAmbience: (_interp, [name, loop, caption]) => {
     playAmbience(String(name), Boolean(loop))
+    if (caption) useStoryStore.getState().setCaption(String(caption))
   },
   applyEffect: (_interp, [type, magnitude, delaySeconds]) => {
     useStoryStore.getState().applyEffect(String(type), Number(magnitude), Number(delaySeconds))

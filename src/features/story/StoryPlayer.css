@@ -332,8 +332,20 @@
    Touch-Ziel (gemessen vorher: ~47x29px, zu knapp in der Hoehe) - das ist die
    tatsaechliche Klickflaeche (Box-Modell), keine optische Vergroesserung per
    Transform/Overlay, der sichtbare Text/Glyph bleibt dabei unveraendert klein. */
-.story-skip {
+/* Traegt Gluehbirne + >>> nebeneinander, wenn beide gleichzeitig noetig sind
+   (z.B. eine noch ungenutzte Wissens-Choice UND ein bereits aktiviertes
+   NEXT) - vorher teilten sie sich einen Slot und schlossen sich gegenseitig
+   aus, das liess NEXT als sichtbaren Text-Button neben der Gluehbirne
+   uebrig. Beide Kinder behalten ihre eigenen margin-top/align-self-Regeln,
+   dieser Wrapper uebernimmt nur das Nebeneinander. */
+.story-stage__corner-actions {
+  display: flex;
   align-self: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.story-skip {
   margin-top: 6px;
   min-width: 44px;
   min-height: 44px;
@@ -524,14 +536,18 @@
 }
 
 /* Ausnahme fuer die allererste Wissens-Choice ("Was ist Diabetes??", <first_
-   knowledge>-Tag): zeigt Icon + Text als Pille statt reinem Kreis, damit das
-   Konzept beim ersten Kontakt verstaendlich ist, plus eine kurze (nicht
-   endlos wiederholte), einladende Leucht-Sequenz. */
+   knowledge>-Tag): zeigt Icon + Text, damit das Konzept beim ersten Kontakt
+   verstaendlich ist - keine Pille/Box mehr, sondern derselbe zurueckhaltende
+   Text-Glow wie beim rechtlichen Disclaimer (.story-disclaimer), nur in
+   der Gold-Farbe des Wissens-Themas statt Orange. Kurze (nicht endlos
+   wiederholte), einladende Leucht-Sequenz auf Icon UND Text zusammen. */
 .story-knowledge-button--intro {
   width: auto;
   height: auto;
-  padding: 10px 16px;
-  border-radius: 999px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -544,24 +560,26 @@
 @keyframes knowledge-invite-glow {
   0%,
   100% {
-    background: rgba(244, 197, 66, 0.12);
-    border-color: rgba(244, 197, 66, 0.5);
-    box-shadow: none;
+    text-shadow: none;
   }
   50% {
-    background: rgba(244, 197, 66, 0.28);
-    border-color: rgba(244, 197, 66, 0.9);
-    box-shadow: 0 0 18px 2px rgba(244, 197, 66, 0.5);
+    text-shadow: 0 0 10px rgba(244, 197, 66, 0.6), 0 0 22px rgba(244, 197, 66, 0.35);
   }
 }
 
-/* Alle uebrigen Wissens-Choices teilen sich mit >>> denselben Slot (siehe
-   StoryPlayer.tsx) - taucht nur auf, wenn nichts mehr zu ueberspringen ist.
-   Bleibt in Ruhe bewusst reines Icon (keine Farb-/Rahmenaenderung wie bei der
+/* Ueberschreibt den Boxen-Hover der Basisklasse .story-knowledge-button -
+   die Intro-Variante bleibt auch bei Hover reiner Text/Icon-Glow. */
+.story-knowledge-button--intro:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Alle uebrigen Wissens-Choices rendern als eigene Gluehbirne neben >>>
+   (siehe .story-stage__corner-actions in StoryPlayer.tsx), sitzen in Ruhe
+   bewusst reines Icon (keine Farb-/Rahmenaenderung wie bei der
    Einladungs-Pille), nur ein kurzer, dezenter Puls beim Erscheinen macht auf
    die neue Position aufmerksam, statt dauerhaft zu leuchten. */
 .story-knowledge-button--corner {
-  align-self: flex-end;
   margin-top: 6px;
   animation: knowledge-corner-pulse 1.4s ease-in-out 2;
 }

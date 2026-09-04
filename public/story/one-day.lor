@@ -1,6 +1,5 @@
 // ============================================================
-// ONE DAY — Vollstaendiges Skript (alle Kapitel)
-// Siehe one-day-variablenmodell.md fuer die Variablenspezifikation
+// ONE DAY — Full Script (all chapters)
 // ============================================================
 
 state
@@ -23,30 +22,30 @@ state
   anfangsEinschaetzung: ""
 
 character chef
-  name: "Chef"
+  name: "Boss"
 
 character robin
   name: "Robin"
 
-// Balu = die Stimme des Koerpers (Blutzucker). Farbe ist FIX (Aareblau/Petrol),
-// unabhaengig davon, was er sagt. Der Host stellt ihm immer einen roten
-// Tropfen voran (🩸), unabhaengig vom Mood-System (das hat nur Lumi).
+// Balu = the voice of the body (blood glucose). Colour is FIXED (Aare blue/petrol),
+// regardless of what he says. The host always prefixes him with a red
+// droplet (🩸), independent of the mood system (that belongs to Lumi only).
 character balu
   name: "Balu"
   color: "#1E4548"
 
-// Lumi = die Emotion/Laune. Farbe UND Emoji wechseln pro Zeile ueber das
-// mood_*-Tag (siehe Blueprint-Dokument fuer die vollstaendige Farbtabelle).
-// Der Host stellt ihr immer einen Stern voran (⭐), gefaerbt in der Farbe
-// des aktuellen mood_*-Tags.
+// Lumi = the emotion/mood. Colour AND emoji change per line via the
+// mood_* tag (see the blueprint document for the full colour table).
+// The host always prefixes her with a star (⭐), coloured to match
+// the current mood_* tag.
 character lumi
   name: "Lumi"
 
-// Schnittstellen zur React-App / Audio-Engine.
-// Eine "function"-Deklaration OHNE eingerueckten Koerper gilt in Loreline
-// automatisch als extern und wird von der Host-App implementiert.
-// Wichtig fuer den JS-Adapter: alle Argumente kommen als EIN Array an,
-// z. B. playSound(interpreter, args) mit args = ["glucose_alarm"].
+// Interfaces to the React app / audio engine.
+// A "function" declaration WITHOUT an indented body counts in Loreline
+// as automatically external and is implemented by the host app.
+// Important for the JS adapter: all arguments arrive as ONE array,
+// e.g. playSound(interpreter, args) with args = ["glucose_alarm"].
 function playSound(name, caption)
 function playAmbience(name, loop, caption)
 function applyEffect(type, magnitude, delaySeconds)
@@ -58,230 +57,287 @@ function offerShare()
 function unlockKnowledge(id, title, text)
 
 // ------------------------------------------------------------
-// KAPITEL 0 — Willkommen
+// CHAPTER 0 — Welcome
 // ------------------------------------------------------------
 
 beat Open
-  Bist du bereit für einen Perspektivenwechsel?
+  Are you ready for a change of perspective?
   choice
-    Ich bin bereit.
+    I'm ready.
       -> Szenenwechsel
 
-    Nein lieber nicht.
+    No, rather not.
       Oh.
       pauseBeat(1)
-      Alles klar.
+      Alright.
       pauseBeat(2)
       ...
       pauseBeat(1)
-      Macht es dich nicht neugierig, wie es wäre, die Funktionen eines deiner Organe zu übernehmen?
+      Doesn't it make you curious what it would be like to take over the functions of one of your organs?
       pauseBeat(1)
       choice
-        Doch, wenn du es so sagst!
+        Alright, if you put it that way!
           -> Szenenwechsel
 
-        Nein, ich bleibe lieber in meiner Komfortzone.
-          Alles klar. Dann bis zum nächsten Mal.
-          -> Ende
+        No, I'd rather stay in my comfort zone.
+          Alright. See you next time, then.
+          -> .
 
 beat Szenenwechsel
-  Super! Auf geht's.
+  Great! Here we go.
   pauseBeat(1)
   -> Willkommen
 
 beat Willkommen
-  Ich bin Alex.
+  I'm Alex.
   pauseBeat(1)
-  Seit einem Jahr lebe ich mit Typ 1 Diabetes.
+  I've been living with Type 1 diabetes for a year.
   pauseBeat(1)
-  Heute bist du ich.
+  Today, you are me.
   pauseBeat(1)
-  Ich übergebe dir das Zepter.
+  I'm handing you the reins.
   pauseBeat(1)
-  Du wirst Entscheidungen treffen, die den Verlauf deiner Blutzuckerkurve beeinflussen.
+  You'll be making decisions that shape the course of your blood glucose curve.
   pauseBeat(2)
-  <disclaimer> Diese Experience ist ein experimentelles Lernformat und kein Ersatz für medizinische Beratung oder ärztliche Behandlung.
+  <disclaimer> This experience is an experimental learning format and not a substitute for medical advice or treatment.
   pauseBeat(2)
   choice
-    Ich habe verstanden.
+    Understood.
       -> DisclaimerBestaetigt
 
 beat DisclaimerBestaetigt
-  Bevor wir anfangen Alex, eine Frage...
+  Before we start, Alex, one question...
   pauseBeat(2)
-  Was denkst du wie gut wirst du abschneiden?
+  What do you think — how well will you do?
   pauseBeat(1)
   -> Einschaetzung
 
 beat Einschaetzung
   choice
-    Ich bin zuversichtlich dass ich das gut hinkriege.
+    I'm confident I'll manage this well.
       anfangsEinschaetzung := zuversichtlich
       -> EinschaetzungBestaetigt
 
-    Hmm, ich weiss nicht...
+    Hmm, I don't know...
       anfangsEinschaetzung := unsicher
       -> EinschaetzungBestaetigt
 
-    Das tönt kompliziert, ich glaube nicht so gut.
+    That sounds complicated, I don't think so well.
       anfangsEinschaetzung := kompliziert
       -> EinschaetzungBestaetigt
 
-    - <first_knowledge>❓ Was ist Diabetes??
-        unlockKnowledge("diabetes", "Was ist Diabetes?", "Diabetes bedeutet, dass der Körper den Blutzuckerspiegel nicht mehr von selbst regulieren kann. Bei Typ 1 stellt die Bauchspeicheldrüse kein Insulin mehr her, deshalb muss es mehrmals täglich von aussen zugeführt werden. Früher nannte man ihn auch jugendlichen Diabetes, da die Autoimmunerkrankung meistens im Kindes- oder Jugendalter diagnostiziert wird. Typ 2 entsteht meist schleichend im Erwachsenenalter. Insulin ist da, aber die Zellen reagieren kaum noch darauf. Er kann in vielen Fällen durch Lebensstiländerungen und mit anderen Medikamenten positiv beeinflusst werden, deshalb wird nicht immer Insulin benötigt.")
+    - <first_knowledge>❓ What is diabetes??
+        unlockKnowledge("diabetes", "What is diabetes?", "Diabetes means the body can no longer regulate blood glucose on its own. In Type 1, the pancreas no longer produces insulin, so it has to be supplied from outside several times a day. It used to be called juvenile diabetes, since the autoimmune condition is usually diagnosed in childhood or adolescence. Type 2 usually develops gradually in adulthood and is classified as metabolic disease. It is partly genetic. Insulin is present, but the cells barely respond to it anymore. In many cases it can be positively influenced through lifestyle changes and other medications, so insulin isn't always needed.")
 
-        Diabetes bedeutet, dass der Körper den Blutzuckerspiegel nicht mehr von selbst regulieren kann.
+        Diabetes means the body can no longer regulate blood glucose on its own.
         pauseBeat(2)
-        Bei Typ 1 stellt die Bauchspeicheldrüse kein Insulin mehr her, deshalb muss es mehrmals täglich von aussen zugeführt werden.
+        In Type 1, the pancreas no longer produces insulin, so it has to be supplied from outside several times a day.
         pauseBeat(2)
-        Wenn du mehr dazu wissen möchtest, kannst du auf 💡 in der Statusleiste klicken.
-        Im Verlauf des heutigen Tages landen alle aha-Momente in deiner Statusleiste.  Du kannst sie jederzeit wieder aufrufen.
+        There are different ways to deliver insulin, but it is usually injected.
         pauseBeat(2)
-        So, was denkst du wie gut wirst du abschneiden?
+        People living with Type 1 diabetes usually have 2 options: 
+        pauseBeat(1)
+        Inject manually with an insulin pen or syringe, or use an insulin pump that automates part of the insulin delivery.
+        pauseBeat(3)
+        The choice depends on the person, technological availability and insurance policies of each country.
+        pauseBeat(3)
+        If you'd like to know more, you can tap 💡 in the status bar.
+        Over the course of today, every "aha" moment lands in your status bar. You can revisit them any time.
+        pauseBeat(3)
+        So, what do you think — how well will you do?
         -> Einschaetzung
 
 beat EinschaetzungBestaetigt
-  Merk dir kurz deine Antwort. Wir kommen am Ende darauf zurück.
-  Was trifft am ehesten auf dich zu?
+  Keep your answer in mind. We'll come back to it at the end.
+  pauseBeat(1)
+  Which of these fits you best?
   choice
-    Ich lebe mit Typ 1 oder insulinpflichtigem Diabetes.
+    I live with Type 1 or insulin-dependent diabetes.
       persona := typ1
       -> WillkommenTyp1
 
-    Ich lebe mit Diabetes, nehme aber kein Insulin.
+    I live with diabetes but don't take insulin.
       persona := diabetesOhneInsulin
       -> WillkommenOhneInsulin
 
-    Ich lebe nicht mit Diabetes.
+    I don't live with diabetes.
       persona := keinDiabetes
       -> WillkommenKeinDiabetes
 
 beat WillkommenTyp1
-  Du bist einer von  ~9 Millionen Menschen weltweit, die mit Typ-1-Diabetes leben.
-  Gemeinsam sind wir etwa die Bevölkerung der Schweiz! (Tendenz steigend, Stand 2025)
-  pauseBeat(1)
-  Schön bist du da.
-  pauseBeat(1)
-  Es kommen dir vermutlich einige der Situationen bekannt vor.
-  pauseBeat(1)
-  Das Ziel dieser kleinen Experience ist es, Menschen ohne Diabetes einen Einblick in unseren Alltag zu geben.
-  pauseBeat(1)
-  Dass der Blutzucker nicht nur ein Wert ist, sondern ein lebendiger Verlauf, der sich ständig verändert.
+  You're one of roughly 9 million people worldwide living with Type 1 diabetes.
   pauseBeat(2)
-  Es ist schwierig zu erklären, wie es sich anfühlt, mit Diabetes zu leben.
+  Together, that's about the population of Switzerland! (And rising, as of 2025.)
   pauseBeat(1)
-  Der Alltag jeder Person ist anders. Jeder Tag bietet neue Überraschungen.
+  Glad you're here.
   pauseBeat(1)
-  Aber vielleicht erkennst du dich in einigen Situationen wieder.
+  Some of these situations will probably feel familiar.
   pauseBeat(1)
-  Sollen wir starten?
+  The goal of this little experience is to give people without diabetes a glimpse into our everyday life.
   pauseBeat(1)
+  That blood glucose isn't just a number, but a living curve that's constantly changing.
+  pauseBeat(2)
+  It's hard to explain what it feels like to live with diabetes.
+  pauseBeat(1)
+  Everyone's daily life looks different. Every day brings new surprises.
+  pauseBeat(1)
+  But maybe you'll recognise yourself in some of these situations.
+  pauseBeat(1)
+  Shall we start?
   choice
-    Los geht's!
+    Let's go!
       -> Alarm
 
 beat WillkommenOhneInsulin
-  Toll bist du hier!
+  Great that you're here!
   pauseBeat(1)
-  Da du selbst mit Diabetes lebst, kennst du die Auswirkungen, die eine chronische Kondition auf den Alltag haben kann.
+  Since you live with diabetes yourself, you know the effects a chronic condition can have on everyday life.
   pauseBeat(1)
-  Diese Auswirkungen sind nicht immer sichtbar, und manchmal auch für einen selbst nicht offensichtlich.
+  These effects aren't always visible, and sometimes not even obvious to yourself.
   pauseBeat(1)
-  Aber sie sind da.
+  But they're there.
   pauseBeat(1)
-  Gleich lebst du für einen Tag mit Typ 1 Diabetes und erlebst, wie sich der Alltag dadurch verändert.
+  In a moment, you'll live a day with Type 1 diabetes and experience how it changes everyday life.
   pauseBeat(1)
-  Bist du bereit?
+  Ready?
   choice
-    Los geht's!
+    Let's go!
       -> Alarm
 
 beat WillkommenKeinDiabetes
-  Merci für deine Neugier!
-  Gleich lebst du für einen Tag mit Typ 1 Diabetes und erlebst, wie sich der Alltag dadurch verändert.
-  pauseBeat(1)
-  Vielleicht kennst du das auch von anderen chronischen Konditionen.
-  pauseBeat(1)
-  Es kommt eine weitere unsichtbare Ebene dazu.
-  pauseBeat(1)
-  Das ist schwierig zu erklären...
+  Thanks for your curiosity!
   pauseBeat(2)
-  Am besten zeige ich es dir. Bist du bereit?
+  In a moment, you'll live a day with Type 1 diabetes and experience how it changes everyday life.
+  pauseBeat(1)
+  You might recognise this from other chronic conditions too.
+  pauseBeat(1)
+  There's one more invisible layer involved.
+  pauseBeat(1)
+  That's hard to explain...
+  pauseBeat(2)
+  Best if I just show you. Ready?
   choice
-    Los geht's!
+    Let's go!
       -> Alarm
 
 
 // ------------------------------------------------------------
-// KAPITEL 1 — Nacht, 04:00 Uhr
+// CHAPTER 1 — Night, 4am
 // ------------------------------------------------------------
 
 beat Alarm
-  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
-  playSound("glucose_alarm", "Glukosealarm ertönt")
+  playAmbience("bedroom_silence", true, "Silence in the bedroom")
+  playSound("glucose_alarm", "Glucose alarm sounds")
 
-  Ein schriller Alarm reisst dich aus dem Schlaf.
+  A shrill alarm tears you out of sleep.
 
   pauseBeat(1)
-  Es ist dunkel. Du blinzelst auf dein Handy.
+  It's dark. You blink at your phone.
   pauseBeat(1)
 
-  $uhrzeit Uhr.
+  $uhrzeit.
 
   setCurve(glukose, trend, uhrzeit)
 
-  Oben auf dem Bildschirm siehst du deinen Glukosewert.
-  Er liegt leicht über dem Zielbereich für die Nacht. Trend: steigend.
-  pauseBeat(1)
+  At the top of the screen you see your glucose reading.
+  It's slightly above the target range for nighttime.
+  pauseBeat(2)
 
-  balu: $glukose mmol/l. Steigend.
+  balu: $glukose mmol/l. Rising.
 
-  pauseBeat(1)
+  pauseBeat(2)
 
-  lumi: <mood_muede> Och nein... nicht schon wieder.
+  lumi: <mood_muede> Oh no... not again.
 
-  pauseBeat(1)
-  Du bist müde. Sehr müde.
-  Dein Handy lässt dich beinahe erblinden.
-  pauseBeat(1)
-  Eigentlich möchtest du einfach weiterschlafen.
-  Der hohe Wert ist allerdings noch da.
-  pauseBeat(1)
-  Was machst du?
+  pauseBeat(2)
+  You're tired. Very tired.
+  Your phone nearly blinds you.
+  pauseBeat(2)
+  Part of you just wants to keep sleeping.
+  But the high reading is still there.
+  pauseBeat(2)
+  What do you do?
   pauseBeat(1)
   -> KorrekturEntscheidung
 
 
 beat KorrekturEntscheidung
   choice
-    Ich nehme die Korrekturdosis. Dieser Wert ist mir zu hoch.
+    I'll take the correction dose. This reading is too high for me.
       logDecision("kap1_korrigiert")
       pfadMorgen := A
       -> KorrekturJa
 
-    Ich ignoriere den Alarm und schlafe vorerst weiter.
+    I'll ignore the alarm and keep sleeping for now. You'll correct once you reach 9mmol.
+      logDecision("kap1_ignoriert")
+      pfadMorgen := B
+      -> KorrekturNein
+
+    ❓ What counts as "in range"?
+      -> ZielbereichWissen
+
+
+beat ZielbereichWissen
+  unlockKnowledge("zielbereich", "What counts as \"in range\"?", "For many people with Type 1 diabetes, roughly 3.9 to 10 mmol/l counts as being \"in range.\" Above that is called hyperglycemia, below it hypoglycemia. The exact target is individual and is usually discussed and set together with your diabetologist.")
+
+  <knowledge>
+  For many people with Type 1 diabetes, roughly 3.9 to 10 mmol/l counts as being "in range." Above that is called hyperglycemia, below it hypoglycemia. The exact target is individual and is usually discussed and set together with your diabetologist.
+
+  pauseBeat(2)
+
+  -> KorrekturEntscheidungNochmal
+
+
+beat KorrekturEntscheidungNochmal
+  choice
+    I'll take the correction dose. This reading is too high for me.
+      logDecision("kap1_korrigiert")
+      pfadMorgen := A
+      -> KorrekturJa
+
+    I'll ignore the alarm and keep sleeping for now.
       logDecision("kap1_ignoriert")
       pfadMorgen := B
       -> KorrekturNein
 
 beat KorrekturJa
-  playSound("pen_open", "Insulinpen wird geöffnet")
-  playSound("inject", "Injektion")
+  playSound("pen_open", "Insulin pen opens")
+  playSound("inject", "Injection")
 
-  Du gibst eine kleine Korrekturdosis.
+  You give yourself a small correction dose.
 
   pauseBeat(1)
 
   insulinOnBoard += 0.5
   applyEffect("bolus_correction", 1.5, 900)
 
-  Der Alarm verstummt. Du drehst dich nochmals um.
-  Langsam wird das Zimmer wieder still.
+  -> KorrekturJaWissen
 
-  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
+
+beat KorrekturJaWissen
+  choice
+    - ❓ Learn more
+        unlockKnowledge("spritzstellen", "Injection sites", "Common injection sites include the belly and the upper arms. Rotating between sites helps prevent lumps forming under the skin from repeated injections in the same spot, which can affect how well insulin is absorbed.")
+
+        <knowledge>
+        Common injection sites include the belly and the upper arms. Rotating between sites helps prevent lumps forming under the skin from repeated injections in the same spot, which can affect how well insulin is absorbed.
+
+        pauseBeat(2)
+
+        -> KorrekturJaWissen
+
+    NEXT
+      -> KorrekturJaWeiter
+
+
+beat KorrekturJaWeiter
+  The alarm goes quiet. You roll over again.
+  Slowly, the room falls silent again.
+
+  playAmbience("bedroom_silence", true, "Silence in the bedroom")
 
   pauseBeat(1)
-  Dann schlummerst du wieder ein.
+  Then you drift back to sleep.
   pauseBeat(1)
   ...zzzZZZzzz...
   pauseBeat(3)
@@ -289,37 +345,40 @@ beat KorrekturJa
 
 
 beat KorrekturNein
-  Nicht jetzt.
-  pauseBeat(1)
-  Wenn du bei 9mmol bist korrigierst du dann.
-  pauseBeat(1)
-  Du legst das Handy wieder weg.
+  Not now.
+  pauseBeat(2)
+  If you hit 9 mmol you'll correct then.
+  pauseBeat(2)
+  You put the phone back down.
 
-  playSound("alarm_dismiss", "Alarm wird stummgeschaltet")
+  playSound("alarm_dismiss", "Alarm is silenced")
 
   applyEffect("dawn_phenomenon", 2, 0)
+  pauseBeat(2)
 
-  <tag_sleepy> Der Alarm verstummt. Du drehst dich nochmals um.
-  Langsam wird das Zimmer wieder still und du schlummerst wieder ein.
+  <tag_sleepy> The alarm goes quiet. You roll over again.
+  Slowly, the room falls silent again and you drift back to sleep.
 
-  playAmbience("bedroom_silence", true, "Stille im Schlafzimmer")
+  playAmbience("bedroom_silence", true, "Silence in the bedroom")
 
-  pauseBeat(1)
+  pauseBeat(2)
   ...zzzZZZzzz...
   pauseBeat(3)
   -> Morgen
 
 
 // ------------------------------------------------------------
-// KAPITEL 2 — Morgen, 06:30 Uhr
+// CHAPTER 2 — Morning, 6:30am
 // ------------------------------------------------------------
 
 beat Morgen
   uhrzeit := "06:30"
-  playSound("alarm_clock", "Wecker klingelt")
-  playAmbience("birds_outside", true, "Vögel zwitschern draussen")
+  playSound("alarm_clock", "Alarm clock rings")
+  playAmbience("birds_outside", true, "Birds chirping outside")
 
-  Der Wecker klingelt.
+  The alarm clock rings.
+  pauseBeat(2)
+  $uhrzeit.
   pauseBeat(2)
 
   if pfadMorgen == "A"
@@ -329,84 +388,85 @@ beat Morgen
 
 
 beat MorgenPfadA
-  Du öffnest langsam die Augen.
+  You slowly open your eyes.
   pauseBeat(2)
-  Zuerst greifst du automatisch nach deinem Basalinsulin.
+  The first thing you reach for, automatically, is your basal insulin.
 
   -> Basalinsulin
 
 
 beat MorgenPfadB
-  Du fühlst dich schwer. Dein Mund ist trocken. Du hast Durst.
+  You feel heavy. Your mouth is dry. You're thirsty.
   pauseBeat(2)
-  Zuerst greifst du automatisch nach deinem Basalinsulin.
+  The first thing you reach for, automatically, is your basal insulin.
 
   -> Basalinsulin
 
 
 beat Basalinsulin
-  playSound("pen_open", "Insulinpen wird geöffnet")
-  playSound("inject", "Injektion")
+  playSound("pen_open", "Insulin pen opens")
+  playSound("inject", "Injection")
 
   pauseBeat(2)
-  Du gibst deine tägliche Dosis. Es gehört zur Routine.
+  You give yourself your daily dose. It's part of the routine.
 
   basalAktiv = true
   insulinOnBoard += 1
   applyEffect("basal", 1, 4800)
 
   pendingKnowledgeId = "insulin_arten"
-  pendingKnowledgeTitle = "Basalinsulin vs. Bolusinsulin"
-  pendingKnowledgeText = "Es gibt verschiedene Arten von Insulin. Basalinsulin wirkt langsam über viele Stunden und deckt den Grundbedarf des Körpers. Bolusinsulin wird zu Mahlzeiten oder zur Korrektur hoher Werte verwendet."
+  pendingKnowledgeTitle = "Basal insulin vs. bolus insulin"
+  pendingKnowledgeText = "There are different types of insulin. Basal insulin acts slowly over many hours and covers the body's baseline need. Bolus insulin acts fast and is used for meals or to correct high readings. If you inject with a pen, you use two different types of insulin: a slow and a fast one. The insulin pump only uses a fast acting insulin to deliver a basal rate, thhat is given in tiny amounts every couple of minutes throughout the day."
 
   -> BasalinsulinWissen
 
 
 beat BasalinsulinWissen
   choice
-    - ❓ Mehr erfahren
+    - ❓ Learn more
         <knowledge> $pendingKnowledgeText
         unlockKnowledge(pendingKnowledgeId, pendingKnowledgeTitle, pendingKnowledgeText)
         -> BasalinsulinWissen
 
-    ➡️ Weiter
+    NEXT
       -> BasalinsulinWeiter
 
 
 beat BasalinsulinWeiter
 
-  pauseBeat(3)
-  Dann legst du den Pen wieder auf den Nachttisch.
+  Then you put the pen back on the nightstand.
   pauseBeat(2)
 
   if pfadMorgen == "A"
-    Jetzt schaust du auf dein Handy.
+    Now you check your phone.
 
     setCurve(6.4, "stable", uhrzeit)
 
     pauseBeat(2)
-    Die Kurve sieht ruhig aus.
+    Your value looks stable.
     pauseBeat(1)
-    Du fühlst dich erstaunlich erholt. Ein guter Start.
+    You feel surprisingly rested. A good start.
     pauseBeat(2)
 
-    balu: Ich bin stabil.
+    balu: I'm stable.
   else
-    Noch bevor du richtig wach bist, greifst du nach deinem Handy.
+    Before you're even properly awake, you reach for your phone.
 
-    setCurve(13.8, "rising", uhrzeit)
+    setCurve(10, "rising", uhrzeit)
 
     pauseBeat(2)
-    Du verziehst kurz das Gesicht.
+    You wince slightly.
     pauseBeat(1)
-    Du kennst auch den Übeltäter:
+    balu: 10 mmol/l. Rising.
     pauseBeat(2)
-    Die grosse Portion Pasta von gestern Abend.
+    You already know the culprit:
+    pauseBeat(2)
+    That big portion of pasta from last night.
     pauseBeat(1)
-    Und deinen klassischen morgendlichen Anstieg.
+    And your usual morning rise.
     pauseBeat(2)
 
-    lumi: <mood_frust> So möchte ich eigentlich nicht in den Tag starten.
+    lumi: <mood_frust> This isn't how I wanted to start the day...
 
     -> MorgenResistenzWissen
 
@@ -415,121 +475,160 @@ beat BasalinsulinWeiter
 
 beat MorgenResistenzWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("morgen_resistenz", "Warum Morgen anders sind", "Der Insulinbedarf ist morgens oft höher als später am Tag. Hormone kurz vor dem Aufwachen machen viele Menschen vorübergehend insulinresistenter. Deshalb können zwei identische Frühstücke an unterschiedlichen Tagen völlig unterschiedliche Glukoseverläufe verursachen.")
+    - ❓ Learn more
+        unlockKnowledge("morgen_resistenz", "Why mornings are different", "Insulin needs are often higher in the morning than later in the day. Hormones released just before waking make many people temporarily more insulin-resistant and can raise blood sugar levels without having eaten. Bad sleep can make this effect even stronger.")
 
         <knowledge>
-        Der Insulinbedarf ist morgens oft höher als später am Tag.
-        pauseBeat(2)
-        Hormone kurz vor dem Aufwachen machen viele Menschen vorübergehend insulinresistenter.
-        pauseBeat(2)
-        Deshalb können zwei identische Frühstücke an unterschiedlichen Tagen völlig unterschiedliche Glukoseverläufe verursachen.
+        Insulin needs are often higher in the morning than later in the day.
+        Hormones released just before waking make many people temporarily more insulin-resistant and can raise blood sugar levels without having eaten anything.
 
         pauseBeat(1)
 
         -> MorgenResistenzWissen
 
-    ➡️ Weiter
+    NEXT
       -> Badezimmer
 
 
 beat Badezimmer
-  playSound("bathroom_door", "Badezimmertür öffnet sich")
-  playSound("faucet_water", "Wasserhahn läuft")
+  playSound("bathroom_door", "Bathroom door opens")
+  playSound("faucet_water", "Swoosh — water running in the shower")
 
-  Jetzt wird erstmal geduscht.
+  You head to the shower.
 
   if pfadMorgen == "A"
+    pauseBeat(2)
+    You step under the water. The earlier reading is already fine.
+
+    setCurve(5.4, "falling", uhrzeit)
     pauseBeat(1)
-    Du stellst dich unters Wasser. Der Wert von vorhin ist schon in Ordnung.
+    ....swooooosh....
+    pauseBeat(3)
+    You step out of the shower and pat yourself dry. 
+    pauseBeat(2)
+    Then you put on the clothes you prepared yesterday evening.
+    pauseBeat(2)
+    Time for breakfast!
   else
     pauseBeat(1)
-    Zuvr gibst du aber eine kleine Korrekturdosis, dann stellst du dich unters Wasser.
+    First, though, you give yourself a small correction dose into your belly, then step under the water.
     pauseBeat(2)
-    Wer weiss, vielleicht wirkt das Insulin ja schneller unter warmem Wasser.
+    Who knows, maybe the insulin works faster under warm water. At least that's something you read in a pamphlet some time ago.
 
-    setCurve(glukose, "falling", uhrzeit)
+    setCurve(7.2, "falling", uhrzeit)
+
+    -> BadezimmerKorrekturWissen
+
+  -> Fruehstueck
+
+
+beat BadezimmerKorrekturWissen
+  choice
+    - ❓ Learn more
+        unlockKnowledge("spritzstellen", "Injection sites", "Common injection sites for bolus insulin include the belly and the upper arms. Rotating between sites helps prevent lumps forming under the skin from repeated injections in the same spot, which can affect how well insulin is absorbed.")
+
+        <knowledge>
+        Common injection sites include the belly and the upper arms. Rotating between sites helps prevent lumps forming under the skin from repeated injections in the same spot, which can affect how well insulin is absorbed.
+
+        pauseBeat(2)
+
+        -> BadezimmerKorrekturWissen
+
+    NEXT
+      -> BadezimmerKorrekturWeiter
+
+
+beat BadezimmerKorrekturWeiter
+  pauseBeat(1)
+  ....swooooosh....
+  pauseBeat(3)
+  You step out of the shower and pat yourself dry.
+  pauseBeat(2)
+  Then you put on the clothes you prepared yesterday evening.
+  pauseBeat(2)
+  Time for breakfast!
 
   -> Fruehstueck
 
 
 // ------------------------------------------------------------
-// KAPITEL 2 (Forts.) — Fruehstueck & Zeitdruck
+// CHAPTER 2 (cont.) — Breakfast & Time Pressure
 // ------------------------------------------------------------
 
 beat Fruehstueck
-  playSound("fridge_open", "Kühlschrank wird geöffnet")
+  playSound("fridge_open", "Fridge opens")
+  pauseBeat(2)
 
-  Du öffnest den Kühlschrank. Heute hast du drei Möglichkeiten.
+  You open the fridge. Today you have two options.
 
   choice
-    Müsli mit Beeren
+    Muesli with berries
       frueshtueckswahl := muesli
       -> Zeitdruck
 
-    Rührei mit Vollkornbrot
+    Scrambled eggs with wholegrain bread
       frueshtueckswahl := ruehrei
       -> Zeitdruck
 
-    Kaffee und Gipfeli to go
-      frueshtueckswahl := gipfeli
-      -> Zeitdruck
-
-    ❓ Was beeinflusst die Kurve noch?
+    ❓ What else affects the curve?
       -> FruehstueckWissen
 
 
 beat FruehstueckWissen
-  unlockKnowledge("naehrstoffe_kurve", "Was die Kurve noch beeinflusst", "Nicht nur Kohlenhydrate wirken sich auf die Glukosekurve aus. Auch Proteine und Fette beeinflussen den Verlauf, meist langsamer und über einen längeren Zeitraum als reine Kohlenhydrate.")
+  unlockKnowledge("naehrstoffe_kurve", "What else affects the curve", "It's not just sugar or carbohydrates that affect the glucose curve. Protein and fat influence it too, usually more slowly and over a longer period than carbohydrates alone.")
 
   <knowledge>
-  Nicht nur Kohlenhydrate wirken sich auf die Glukosekurve aus. Auch
-  Proteine und Fette beeinflussen den Verlauf, meist langsamer und
-  über einen längeren Zeitraum als reine Kohlenhydrate.
+  It's not just sugar or carbohydrates that affect the glucose curve. Protein and fat influence it too, usually more slowly and over a longer period than carbohydrates alone. So different food combinations need different insulin strategies.
 
-  pauseBeat(3)
-
-  Jetzt nochmal die Wahl von eben.
+  pauseBeat(1)
 
   -> FruehstueckNochmal
 
 
 beat FruehstueckNochmal
   choice
-    Müsli mit Beeren
+    Muesli with berries
       frueshtueckswahl := muesli
       -> Zeitdruck
 
-    Rührei mit Vollkornbrot
+    Scrambled eggs with wholegrain bread
       frueshtueckswahl := ruehrei
       -> Zeitdruck
 
-    Kaffee und Gipfeli to go
-      frueshtueckswahl := gipfeli
-      -> Zeitdruck
-
-
 beat Zeitdruck
-  Plötzlich fällt dein Blick auf die Uhr.
+  Suddenly your eyes land on the clock.
+  pauseBeat(1)
 
   uhrzeit := "07:18"
-  $uhrzeit Uhr. Der Zug fährt gleich.
+  $uhrzeit. The train leaves at 07:39. You can make it if you hurry up and run.
+  pauseBeat(1)
 
-  <tag_surprised> "Oh nein."
+  if pfadMorgen == "A"
+    setCurve(5.4, "stable", uhrzeit)
+  else
+    setCurve(7.2, "stable", uhrzeit)
+
+  How did time get by so quickly?!
+  pauseBeat(1)
+  What do you do?
+  pauseBeat(1)
 
   choice
-    Rennen.
+    Run. You just started this job 3 months ago. You can't afford to be late!
+      pauseBeat(1)
       gerannt = true
       logDecision("kap2_rennen")
       -> Bahnhof
 
-    Den nächsten Zug nehmen.
+    Catch the next train. There's nothing you hate more than rushing your mornings.
       gerannt = false
       logDecision("kap2_gemuetlich")
       -> Bahnhof
 
 
 beat Bahnhof
+  playSound("front_door", "Front door shuts as you leave for the station")
+
   if gerannt
     -> BahnhofGerannt
   else
@@ -537,122 +636,162 @@ beat Bahnhof
 
 
 beat BahnhofGerannt
-  if frueshtueckswahl == "gipfeli"
-    Keine Zeit mehr fürs Gipfeli. Du spritzt schnell dein Basalinsulin nach,
-    ziehst dich an. Los!
-  else
-    Du spritzt schnell, isst im Stehen die letzten Bissen, ziehst dich an. Los!
-    insulinOnBoard += 3
-    applyEffect("bolus_meal", 3, 900)
+  You inject quickly, weigh your usual portion and prepare the food.
+  pauseBeat(1)
+  1, 2 3 bites. You're done. Go!
+  insulinOnBoard += 3
+  applyEffect("bolus_meal", 3, 900)
 
-  playSound("footsteps_running", "Schnelle Schritte, du rennst")
-  playSound("train_doors_close", "Zugtüren schliessen")
+  playSound("footsteps_running", "Running footsteps and heavy breathing")
+  playSound("train_doors_close", "Train doors close")
   bewegungAktiv = true
   applyEffect("bewegung_rennen", 2.5, 1200)
+  pauseBeat(2)
+  ....runRUNrun....
+  pauseBeat(3)
 
-  Die Türen schliessen sich. Geschafft.
-  Du atmest tief durch. Du setzt dich.
+  The doors close. Made it.
+  pauseBeat(2)
+  You take a deep breath. You sit down.
 
-  Langsam wandert dein Blick nach oben. Die Kurve verändert sich.
+  Slowly, your gaze drifts upward. Your blood glucose level is changing.
 
   if frueshtueckswahl == "muesli"
     setCurve(9.8, "rising", uhrzeit)
-    Erst steigt sie. Dann fällt sie plötzlich schnell.
+    First it rises. Then it suddenly drops fast.
     setCurve(6.2, "falling", uhrzeit)
   else if frueshtueckswahl == "ruehrei"
     setCurve(7.8, "rising", uhrzeit)
-    Nur ein kleiner Anstieg. Dann beginnt sie zu fallen.
+    Only a small rise. Then it starts to fall.
     setCurve(6.0, "falling", uhrzeit)
-  else
-    setCurve(8, "rising", uhrzeit)
-    Sie steigt leicht durchs Rennen.
 
-  War das das Rennen? Oder wirkt jetzt das Insulin?
+  balu: Something is happening here...
+  pauseBeat(2)
+  lumi: <mood_sorge> Oh no why are we dropping? 
+  pauseBeat(2)
+  lumi: <mood_sorge> Did I run to fast
+  pauseBeat(1)
+  lumi: <mood_sorge> Or is the insulin kicking in now?
+  pauseBeat(1)
+  What do you think?
 
-  balu: Whoa... das war gerade etwas viel.
+  -> BewegungInterpretation
 
+beat BewegungInterpretation
   choice
-    Das Rennen.
+    I think it was the running.
       logDecision("kap2_deutung_rennen")
+      You guess the activity may be the culprit and keep an eye on your status bar.
+      pauseBeat(2)
+      You'll soon arrive at the office anyway. 
+      .....rock-rock....
+      pauseBeat(3)
+      -> BewegungWissen
 
-    Das Insulin.
+    For sure the insulin I took.
       logDecision("kap2_deutung_insulin")
+      Maybe the insulin you just took before leaving the house is starting to work now.
+      pauseBeat(2)
+      You just keep an eye on the status bar. You'll be at the office soon enough anyway.
+      .....rock-rock....
+      pauseBeat(3)
+      -> BewegungWissen
 
-    Beides zusammen.
+    Probably both of them together.
       logDecision("kap2_deutung_beides")
-
-    Keine Ahnung, ehrlich gesagt.
-      logDecision("kap2_deutung_unsicher")
-
-  -> BewegungWissen
-
+      Probably tje combination of both: a lot of active insulin on board from your breakfast, and then you running to the station.
+      pauseBeat(2)
+      Maybe it was too much at once. You jsut keep an eye on the Status bar for now. 
+      pauseBeat(2)
+      You'll soon be at the office anyway.
+      pauseBeat(2)
+      .....rock-rock....
+      pauseBeat(3)
+      -> BewegungWissen
+      
 beat BewegungWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("bewegung_aktivitaet", "Wie Bewegung wirkt", "Aktivität beeinflusst den Blutzucker. Je nach Situation kann er dadurch schnell steigen oder fallen.")
+    - ❓ Learn more
+        unlockKnowledge("bewegung_aktivitaet", "How movement affects it", "Activity affects blood glucose. Depending on the situation, it can cause a quick rise or a quick drop. Cardio tends to make it drop, whereas explosive movements or strength training can momentarily raise it. The drop in blood glucose level is even stronger, if there is a lot of insulin in your system. People with Type 1 diabetes can still be phyically active, they just have to develop strategies to especially prevent hypoglycemia. One safety measure is to always carry some sugary snacks with you that can raise blood glucose quickly when needed.")
 
         <knowledge>
-        Aktivität beeinflusst den Blutzucker. Je nach Situation kann er dadurch
-        schnell steigen oder fallen.
+        You already know that there is more than food that affects blood glucose. One other factor is activity. Depending on the situation and activity, it
+        can cause a quick rise or a quick drop in your blood sugar levels, especially, if you still have active insulin "on board". It is important to find out, how activity impacts your blood glucose and how long the insulin stays in your system.
 
         pauseBeat(3)
 
         -> BewegungWissen
 
-    ➡️ Weiter
+    NEXT
       -> Arbeit
 
 
 beat BahnhofGemuetlich
-  Du ziehst dich an, in aller Ruhe.
+  Everything is fine, no no need to rush.
+  pauseBeat(2)
 
-  playSound("footsteps_calm", "Ruhige Schritte")
-
-  Raus zum Bahnhof. Du setzt dich auf ein Bänkli.
-
-  playSound("pen_open", "Insulinpen wird geöffnet")
-  playSound("inject", "Injektion")
+  playSound("pen_open", "Insulin pen opens")
+  playSound("inject", "Injection")
 
   insulinOnBoard += 3
+
+  You inject your Bolus Insulin, weigh your usual protions, prepare your food.
+  pauseBeat(2)
+  ...miam....
+  pauseBeat(3)
   applyEffect("bolus_meal", 3, 900)
+  Then you put your shoes on, grab your bag and out you go.
+  
+  playSound("footsteps_calm", "Calm footsteps")
+  pauseBeat(2)
 
-  Du spritzt dein Insulin und isst in Ruhe fertig.
+  Out to the station.
 
-  playSound("train_arrival", "Zug fährt ein")
+  playSound("train_arrival", "Train arrives")
+
+  pauseBeat(2)
 
   setCurve(6.6, "stable", uhrzeit)
 
-  Der nächste Zug kommt. Die Kurve bleibt ruhig.
-  Du steigst entspannt ein.
+  The next train arrives. The curve stays calm.
+  pauseBeat(2)
+  You board, relaxed.
 
   -> Arbeit
 
 
 // ------------------------------------------------------------
-// KAPITEL 3 — Arbeit
+// CHAPTER 3 — Work
 // ------------------------------------------------------------
 
 beat Arbeit
-  playSound("office_door", "Bürotür öffnet sich")
-  playAmbience("office_ambience", true, "Bürogeräusche im Hintergrund")
+  playSound("office_door", "Office door opens as your boss walks in")
+  playAmbience("office_ambience", true, "Office background noise")
+  uhrzeit := "08:19"
 
-  Kaum sitzt du am Arbeitsplatz, öffnet sich die Bürotür.
+  pauseBeat(2)
+  You've barely sat down at your desk when the office door opens.
 
   if gerannt
-    setCurve(6, "stable", uhrzeit)
+    setCurve(6.3, "stable", uhrzeit)
   else
     setCurve(7, "stable", uhrzeit)
 
   if gerannt
-    chef: Gut, dass du da bist. Ein Kunde ist spontan hier. Kannst du ihm dein Projekt um 08:30 Uhr präsentieren?
+    chef: Alex! Good, you're here. A client showed up unannounced and Sam is with another client. Can you take over the presentation at 8:30?
   else
-    chef: Wo warst du denn? Ein Kunde ist spontan hier. Kannst du ihm dein Projekt um 08:30 Uhr präsentieren?
+    chef: Where were you? A client showed up unannounced. Sam is out with another client. Can you present your project in their stead at 8:30?
 
-  lumi: <mood_gestresst> Bitte heute nicht.
+  lumi: <mood_gestresst> Not today, please.
 
-  Dein Blick wandert oben nach rechts zur Uhr. Noch zehn Minuten. Die Präsentation läuft.
+  Your gaze drifts up to the clock. Ten minutes left. 
+  pauseBeat(2)
+  You nod and smile politely.
+  pauseBeat(2)
+  Time to shine.
+  pauseBeat(2)
 
-  Während dessen passiert etwas. Ganz leise. Die Kurve steigt.
+  Meanwhile, something happens. Very quietly.
 
   stressLevel += 40
   applyEffect("stress", 2, 300)
@@ -662,136 +801,238 @@ beat Arbeit
   else
     setCurve(11.9, "rising", uhrzeit)
 
-  Und trotzdem steigt sie weiter.
+  And still it keeps rising.
 
-  balu: Hm... ich steige.
+  balu: Hm... I'm rising.
+  pauseBeat(2)
+  lumi: What's happening? Why are we rising??
+  pauseBeat(2)
 
-  Was, glaubst du, treibt die Kurve gerade nach oben?
+  What do you think is pushing the curve up right now?
 
   choice
-    Der Stress von der Präsentation.
+    The stress from the presentation.
       logDecision("kap3_deutung_stress")
 
-    Das Frühstück wirkt jetzt erst richtig.
+    Breakfast is only really kicking in now.
       logDecision("kap3_deutung_fruehstueck")
 
-    Das Rennen von vorhin, verzögert. if gerannt
+    The running from earlier, delayed. if gerannt
       logDecision("kap3_deutung_bewegung")
 
-    Keine Ahnung, ehrlich gesagt.
+    No idea, honestly.
       logDecision("kap3_deutung_unsicher")
 
   -> StressWissen
 
 beat StressWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("stress_blutzucker", "Wie Stress wirkt", "Oft ist es nicht nur ein Grund. Stress kann den Blutzucker erhöhen. Hormone wie Cortisol und Adrenalin sorgen dafür, dass die Leber Glukose freisetzt. Das ist eine normale Reaktion des Körpers.")
+    - ❓ Learn more
+        unlockKnowledge("stress_blutzucker", "How stress affects it", "It's often not just one reason. Stress can raise blood glucose. Hormones like cortisol and adrenaline cause the liver to release glucose. That's a normal response of the body. ")
 
         <knowledge>
-        Oft ist es nicht nur ein Grund. Stress kann den Blutzucker erhöhen.
-        Hormone wie Cortisol und Adrenalin sorgen dafür, dass die Leber
-        Glukose freisetzt. Das ist eine normale Reaktion des Körpers.
+        It's often not just one reason. Stress can raise blood glucose. Hormones like cortisol and adrenaline cause the liver to release glucose. That's a normal response of the body, which the body usually regulates by secreting more insulin. People with Type 1 diabetes don't produce insulin anymore, therefore they need to respond themselves by injecting.
 
         pauseBeat(3)
 
         -> StressWissen
 
-    ➡️ Weiter
+    NEXT
       -> ArbeitAbschluss
 
 
 beat ArbeitAbschluss
-  Die Präsentation ist vorbei. Der Kunde bedankt sich kurz.
-  Sein Gesicht verrät nicht viel.
+  pauseBeat(1)
+  Hmmm... You are probably stressed out.
+  pauseBeat(2)
+  Even though you have been working on this project from the beginning 3 months ago, Sam is the lead.
+  pauseBeat(2)
+  But you want to show what you got, so you get ready and put together a presentation.
+  pauseBeat(2)
+  It's showtime!
+  pauseBeat(2)
+  ....blaBLAbla....
+  pauseBeat(3)
 
-  "Wir melden uns." Mehr sagt er nicht. Dann ist er wieder weg.
+  uhrzeit := "10:02"
+  if gerannt
+    setCurve(10.8, "rising", uhrzeit)
+  else
+    setCurve(11.9, "rising", uhrzeit)
 
-  Du weisst nicht, ob das gut oder schlecht war.
+  The presentation is over. The client thanks you briefly.
+  pauseBeat(2)
+  Their face doesn't give much away.
+  pauseBeat(2)
+
+  "We'll be in touch." They don't say more. Then they're gone.
+  pauseBeat(2)
+  You don't know whether that was good or bad. But it's done!
+  pauseBeat(2)
+  Now it's time to finally continue working on your other project.
+  pauseBeat(2)
+  ....workwork....
+  pauseBeat(3)
 
   -> Mittag
 
 
 // ------------------------------------------------------------
-// KAPITEL 4 — Mittag
+// CHAPTER 4 — Lunch
 // ------------------------------------------------------------
 
 beat Mittag
-  playSound("cafeteria_door", "Kantinentür öffnet sich")
-  playAmbience("cafeteria_ambience", true, "Stimmen und Geschirr in der Kantine")
+  playSound("cafeteria_door", "Cafeteria door opens")
+  playAmbience("cafeteria_ambience", true, "Voices and dishes in the cafeteria")
+  uhrzeit := "11:55"
 
-  Die Anspannung der Präsentation sitzt dir noch etwas in den Schultern.
+  The tension from the presentation is still sitting in your shoulders.
+  pauseBeat(2)
+  But you are starting to think about lunch.
+  pauseBeat(2)
+  $uhrzeit.
+  pauseBeat(1)
+  You hear the door opening and a familiar head poking through.
+  pauseBeat(2)
+  robin: Alex, we're heading over to the cantine. Are you coming with us?
+  pauseBeat(2)
+  Right on time.
+  pauseBeat(2)
 
-  robin: Kommst du mit in die Kantine?
-
-  Heute gibt es wieder das Standardmenü. Zum Glück kennst du es bereits.
-  Du weisst ungefähr, wie viele Kohlenhydrate enthalten sind.
+  Today it's the standard menu again. Lucky for you, you already know it and how tu Bolus for it.
+  pauseBeat(2)
+  But sometimes you feel weird when injecting in public.
+  pauseBeat(2)
+  You hesitate.
+  pauseBeat(2)
+  What do you want to do?
 
   applyEffect("kohlenhydrate_mahlzeit", 3, 900)
 
   choice
-    Am Tisch.
+    Head to the cantine with Robin and inject at the table.
       oeffentlichSpritzen := tisch
       logDecision("kap4_tisch")
-      playSound("pen_open", "Insulinpen wird geöffnet")
-      playSound("inject", "Injektion")
+      playSound("pen_open", "Insulin pen opens")
+      playSound("inject", "Injection")
 
-      robin: Darf ich fragen, was du da machst?
+      pauseBeat(2)
+      You grab your bag and join them.
+      pauseBeat(2)
+      ....food being served....
+      pauseBeat(2)
+      At the table, you pull out your insulin pen, scroll on a new needle and lift your shirt just enough to see your lower belly.
+      pauseBeat(2)
+      Even though you tried to be discreet, you notice some gazes.
+      pauseBeat(2)
+      lumi: <mood_scham> I knew this was going to happen...
+      pauseBeat(2)
+      You've had some bad experiences when injecting in public. 
+      pauseBeat(2)
+      One time someone thought you were a junkie.
+      pauseBeat(2)
+      Another time you injected in a train, and the person next to you seemed... discusted.
+      pauseBeat(2)
+      Of course most of the times nothing happened and nobody cared.
+      pauseBeat(2)
+      But these experiences impacted you...
+      pauseBeat(3)
+      Robin looks at you, curious and a bit confused.
+      pauseBeat(2)
+      They see you injecting for the first time.
+      pauseBeat(2)
+
+      robin: Can I ask what you're doing there?
 
       choice
-        Kurze Erklärung.
+        Give her a short answer about your condition.
           logDecision("kap4_erklaerung_kurz")
-          Du erklärst es kurz. Ein bisschen unangenehm ist es dir schon.
+          You explain it briefly. It's a little uncomfortable for you.
 
-        Enthusiastische Erklärung.
+          lumi: <mood_scham> I keep telling myself this shouldn't feel embarrassing anymore.
+          pauseBeat(2)
+          Robin notices your discomfort and stops asking questions.
+          pauseBeat(2)
+          You continue to eat.
+          ....munchmunch....
+          pauseBeat(3)
+          Then you head back, make a coffee and start working again.
+          pauseBeat(2)
+          You are quite happy since you get to work on Project Penguin, your favourite project so far.
+
+        Give an enthusiastic answer.
           logDecision("kap4_erklaerung_enthusiastisch")
-          Du erzählst gerne davon.
+          You're happy to talk about it. 
+          pauseBeat(2) 
+          She asks some more questions like "Can you eat sugar?" and "Doesn't it hurt?"
+          pauseBeat(2)
+          You tell her about your favourite cake your neighbourhood bakery makes and that it usually doesn't hurt.
+          pauseBeat(2)
+          You continue to eat.
 
-          lumi: <mood_stolz> Kein Grund, sich dafür zu verstecken.
+          lumi: <mood_stolz> No reason to hide it.
+          ....munchmunch....
+          pauseBeat(3)
+          Then you head back, make a coffee and start working again.
+          pauseBeat(2)
+          You are quite happy since you get to work on Project Penguin, your favourite project so far.
+          
 
-    Noch kurz am Arbeitsplatz.
+    Inject at your desk, then join them later.
       oeffentlichSpritzen := arbeitsplatz
       logDecision("kap4_arbeitsplatz")
-      playSound("pen_open", "Insulinpen wird geöffnet")
-      playSound("inject", "Injektion")
+      playSound("pen_open", "Insulin pen opens")
+      playSound("inject", "Injection")
+
+      lumi: <mood_scham> Easier this way. No questions, no explaining.
+      pauseBeat(2)
+      lumi: <mood_scham> I'm trying to work on not feeling this way anymore. I just... can't always help it.
+      pauseBeat(2)
+      You head over to the cantine, get the daily menu and join Robin at the table.
+      pauseBeat(2)
+      ....munchmunch....
+      pauseBeat(3)
+      Then you head back, make a coffee and start working again.
+      pauseBeat(2)
+      You are quite happy since you get to work on Project Penguin, your favourite project so far.
+      
 
   -> SpritzenWissen
 
 beat SpritzenWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("oeffentlich_spritzen", "Spritzen in der Öffentlichkeit", "Viele Menschen mit Typ-1-Diabetes fühlen sich besonders kurz nach der Diagnose unsicher, in der Öffentlichkeit Insulin zu spritzen. Manche beantworten Fragen gerne. Andere möchten diesen Moment lieber für sich behalten. Beides ist völlig in Ordnung.")
+    - ❓ Learn more
+        unlockKnowledge("oeffentlich_spritzen", "Injecting in public", "Many people with Type 1 diabetes feel uneasy about injecting insulin in public, especially soon after diagnosis. Some are happy to answer questions. Others prefer to keep that moment to themselves. Both are perfectly fine.")
 
         <knowledge>
-        Viele Menschen mit Typ-1-Diabetes fühlen sich besonders kurz nach der
-        Diagnose unsicher, in der Öffentlichkeit Insulin zu spritzen. Manche
-        beantworten Fragen gerne. Andere möchten diesen Moment lieber für
-        sich behalten. Beides ist völlig in Ordnung.
+        Some people with Type 1 diabetes feel uneasy about injecting insulin in public, especially soon after diagnosis. Some are happy to answer questions. Others prefer to keep that moment to themselves. Both are perfectly fine.
 
         pauseBeat(3)
 
         -> SpritzenWissen
 
-    ➡️ Weiter
+    NEXT
       -> Nachmittag
 
 
 // ------------------------------------------------------------
-// KAPITEL 5 — Nachmittag
+// CHAPTER 5 — Afternoon
 // ------------------------------------------------------------
 
 beat Nachmittag
-  Zurück am Arbeitsplatz sinkt dein Blutzucker langsam wieder. Er pendelt
-  sich schön ein. Endlich kannst du an deinem Hauptprojekt weiterarbeiten.
+  playSound("office_door_close", "Office door closes behind you")
+
+  Back at your desk, your blood glucose is slowly dropping again. It's
+  settling in nicely. Finally you can get back to your main project.
 
   uhrzeit := "15:30"
-  $uhrzeit Uhr. Langsam meldet sich der Hunger.
+  $uhrzeit. Hunger is slowly setting in.
 
   setCurve(4.4, "falling", uhrzeit)
 
   balu: Hey.
 
-  Du ignorierst ihn. Du bist im Flow.
+  You ignore him. You're in the flow.
 
   pauseBeat(2)
 
@@ -799,89 +1040,122 @@ beat Nachmittag
 
   balu: Hey!
 
-  lumi: <mood_hungrig> Ich habe langsam Hunger...
+  lumi: <mood_hungrig> I'm getting hungry...
 
-  Ja gleich, sagst du.
+  In a minute, you say.
 
   pauseBeat(2)
 
   setCurve(3.8, "falling", uhrzeit)
 
-  balu: HEY! Ich rede mit dir!
+  balu: HEY! I'm talking to you!
 
-  playSound("glucose_alarm", "Glukosealarm ertönt")
+  playSound("glucose_alarm", "Glucose alarm sounds")
 
-  Jetzt erst schaust du hin.
+  Only now do you look up.
 
-  Ein kleiner Apfel. Schnell.
+  A small apple. Quickly.
 
-  Genervt isst du ihn. Konzentrieren konntest du dich sowieso schon
-  eine Weile nicht mehr richtig.
+  Annoyed, you eat it. You hadn't been able to concentrate properly
+  for a while anyway.
 
   applyEffect("traubenzucker", 2, 300)
 
-  playSound("teams_notification", "Teams-Nachricht kommt an")
+  lumi: <mood_unsicher> Wait... why did that even happen? I didn't do anything different today.
 
-  Beim Knabbern kommt eine Teams-Nachricht von Robin rein.
+  balu: I don't make the rules here.
 
-  robin: Schon was vom Kunden gehört?
+  playSound("teams_notification", "Teams message arrives — it's Robin")
 
-  "Nein."
+  While you're eating, a Teams message comes in from Robin.
 
-  robin: Kommst du heute Abend spontan Apéro? Wir gehen am Feierabend los.
+  robin: Heard anything from the client yet?
 
-  Du überlegst kurz. Dann lächelst du.
+  "No."
 
-  "Ja klar! Bin dabei."
+  robin: Feel like a spontaneous drink after work? We're heading out at the end of the day.
+
+  You think about it for a moment. Then you smile.
+
+  "Yeah, sure! I'm in."
 
   -> HypoWissen
 
 beat HypoWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("hypo_anzeichen", "Wie sich Unterzucker ankündigt", "Eine Unterzuckerung kündigt sich oft leise an: Konzentrationsschwierigkeiten, Zittern, Schwitzen oder plötzlicher Heisshunger können erste Anzeichen sein. Wer gerade sehr beschäftigt ist, übersieht diese Signale leicht.")
+    - ❓ Learn more
+        unlockKnowledge("hypo_anzeichen", "How a low announces itself", "A low blood sugar often announces itself quietly: trouble concentrating, shakiness, sweating, or a sudden intense hunger can be early signs. If you're very busy, it's easy to miss these signals.")
 
         <knowledge>
-        Eine Unterzuckerung kündigt sich oft leise an: Konzentrationsschwierigkeiten,
-        Zittern, Schwitzen oder plötzlicher Heisshunger können erste Anzeichen sein.
-        Wer gerade sehr beschäftigt ist, übersieht diese Signale leicht.
+        A low blood sugar often announces itself quietly: trouble
+        concentrating, shakiness, sweating, or a sudden intense hunger
+        can be early signs. If you're very busy, it's easy to miss
+        these signals.
 
         pauseBeat(3)
 
         -> HypoWissen
 
-    ➡️ Weiter
+    NEXT
       -> NachmittagAbschluss
 
 
 beat NachmittagAbschluss
-  Der Nachmittag zieht sich. Dann, kurz vor Feierabend:
+  The afternoon drags on. Then, just before the end of the workday:
 
   uhrzeit := "17:45"
-  $uhrzeit Uhr.
+  $uhrzeit.
 
-  Du klappst den Laptop zu. Feierabend.
+  You close your laptop. End of the workday.
 
   -> Apero
 
 
 // ------------------------------------------------------------
-// KAPITEL 6 — Apero
+// CHAPTER 6 — Drinks
 // ------------------------------------------------------------
 
 beat Apero
-  playAmbience("restaurant_ambience", true, "Gespräche und Gläser im Hintergrund")
+  playAmbience("restaurant_ambience", true, "Conversations and glasses in the background")
 
-  Auf dem Tisch stehen Chips, Käse, Brot, Nüsse. Ein Glas Prosecco.
-  Du kennst die Kohlenhydratmenge nicht genau.
+  On the table: chips, cheese, bread, nuts. A glass of prosecco.
+  You don't know the exact carb count.
+
+  pauseBeat(1)
+
+  You check your phone.
+
+  setCurve(5.4, "stable", uhrzeit)
+
+  balu: 5.4 mmol/l.
+
+  pauseBeat(1)
+
+  lumi: <mood_unsicher> Should I bolus conservatively, or just go with my normal guess? Will that be fine, Balu?
+
+  pauseBeat(1)
+
+  balu: Probably.
+
+  pauseBeat(1)
+
+  lumi: <mood_frust> What do you mean, "probably"?
+
+  pauseBeat(1)
+
+  balu: I'm no oracle.
+
+  pauseBeat(2)
+
+  What do you do?
 
   choice
-    Lieber vorsichtig schätzen.
+    Bolus conservatively — less than you think you need.
       kohlenhydratSchaetzung := vorsichtig
       logDecision("kap6_vorsichtig")
       applyEffect("kohlenhydrate_mahlzeit", 1.5, 900)
 
-    So genau wie möglich schätzen.
+    Bolus the normal amount you guessed.
       kohlenhydratSchaetzung := genau
       logDecision("kap6_genau")
       applyEffect("kohlenhydrate_mahlzeit", 2.5, 900)
@@ -890,19 +1164,19 @@ beat Apero
 
 beat SchaetzenWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("kohlenhydrate_schaetzen", "Kohlenhydrate schätzen", "Viele Menschen mit Typ-1-Diabetes nutzen Apps, die Mahlzeiten fotografieren und beim Abschätzen der Kohlenhydrate helfen. Sie können unterstützen, ersetzen aber nie die eigene Erfahrung.")
+    - ❓ Learn more
+        unlockKnowledge("kohlenhydrate_schaetzen", "Estimating carbohydrates", "Many people with Type 1 diabetes use apps that photograph meals and help estimate carbohydrates. They can help, but they never replace one's own experience.")
 
         <knowledge>
-        Viele Menschen mit Typ-1-Diabetes nutzen Apps, die Mahlzeiten fotografieren
-        und beim Abschätzen der Kohlenhydrate helfen. Sie können unterstützen,
-        ersetzen aber nie die eigene Erfahrung.
+        Many people with Type 1 diabetes use apps that photograph
+        meals and help estimate carbohydrates. They can help, but
+        they never replace one's own experience.
 
         pauseBeat(3)
 
         -> SchaetzenWissen
 
-    ➡️ Weiter
+    NEXT
       -> AperoWeiter
 
 
@@ -914,15 +1188,15 @@ beat AperoWeiter
 
 
 beat AperoErgebnisA
-  Du hast vorsichtig geschätzt. Später zu Hause zeigt die Kurve einen
-  erhöhten Wert.
+  You bolused conservatively. Later, at home, the curve shows a
+  clearly raised reading.
 
-  setCurve(11.8, "rising", uhrzeit)
+  setCurve(12, "rising", uhrzeit)
 
-  "Hm. Vielleicht hätte ich etwas mehr Insulin geben können. Ist okay.
-  Ich korrigiere jetzt."
+  "Hm. Maybe I could have given a bit more insulin. It's okay.
+  I'll correct now."
 
-  lumi: <mood_zuversichtlich> Ist okay. Wir kriegen das hin.
+  lumi: <mood_zuversichtlich> It's okay. We'll manage this.
 
   applyEffect("bolus_correction", 1.5, 900)
 
@@ -930,76 +1204,83 @@ beat AperoErgebnisA
 
 
 beat AperoErgebnisB
-  Du hast möglichst genau geschätzt. Die Kurve bleibt ruhig. Oder sie
-  weicht trotzdem leicht ab. Nicht alles lässt sich perfekt berechnen.
+  You bolused the amount you guessed. Later, at home, the curve
+  looks calm.
+
+  setCurve(7, "stable", uhrzeit)
+
+  Not too high, not too low. This time, the guess held up. That
+  doesn't mean it always will.
 
   -> UnvorhersehbarkeitWissen
 
 beat UnvorhersehbarkeitWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("unvorhersehbarkeit", "Warum nichts perfekt planbar ist", "Auch mit Erfahrung gibt es keine perfekten Glukoseverläufe. Viele Faktoren wirken gleichzeitig.")
+    - ❓ Learn more
+        unlockKnowledge("unvorhersehbarkeit", "Why nothing can be planned perfectly", "Even with experience, there's no such thing as a perfect glucose curve. Many factors act at once.")
 
         <knowledge>
-        Auch mit Erfahrung gibt es keine perfekten Glukoseverläufe. Viele
-        Faktoren wirken gleichzeitig.
+        Even with experience, there's no such thing as a perfect
+        glucose curve. Many factors act at once.
 
         pauseBeat(3)
 
         -> UnvorhersehbarkeitWissen
 
-    ➡️ Weiter
+    NEXT
       -> Zuhause
 
 
 // ------------------------------------------------------------
-// KAPITEL 7 — Zuhause
+// CHAPTER 7 — Home
 // ------------------------------------------------------------
 
 beat Zuhause
-  Was für ein Tag.
+  What a day.
 
-  playSound("front_door", "Haustür fällt ins Schloss")
+  playSound("front_door", "Front door shuts as you get home")
   uhrzeit := "19:00"
 
-  playSound("whatsapp_notification", "WhatsApp-Nachricht kommt an")
+  playSound("whatsapp_notification", "WhatsApp message arrives")
 
-  chef: Kunde ist begeistert! Nächste Woche Detailkonzept!
+  chef: The client's thrilled! Detailed proposal next week!
 
-  Du lächelst.
+  You smile.
 
-  lumi: <mood_gluecklich> Geschafft!
+  lumi: <mood_gluecklich> Made it.
 
-  Der Tag war lang. Du öffnest den Kühlschrank. Heute hast du Lust auf ...
+  playSound("fridge_open", "Fridge opens")
+
+  It's been a long day. You open the fridge. Tonight you're in the mood for...
 
   choice
-    Etwas Ausgewogenes kochen
+    Cooking something balanced
       abendessenWahl := kochen
-      playSound("cooking_pan", "Pfanne auf dem Herd")
+      playSound("cooking_pan", "Pan on the stove")
       applyEffect("kohlenhydrate_mahlzeit", 2, 1200)
 
-      Gemüse aus dem Ofen zu gebackenem Feta. Dazu ein kleines
-      Schoggimousse zum Dessert.
+      Roasted vegetables with baked feta. A small chocolate mousse
+      for dessert on the side.
 
-    Etwas Schnelles
+    Something quick
       abendessenWahl := schnelles
       applyEffect("kohlenhydrate_mahlzeit", 2, 900)
 
-      Pasta von gestern, dazu etwas mehr Salat und ein bisschen weniger
-      Pasta als sonst. Vielleicht steigt der Zucker dadurch etwas weniger.
+      Yesterday's pasta, with a bit more salad and a bit less
+      pasta than usual. Maybe that'll keep the rise a little lower.
 
-    Essen bestellen
+    Ordering in
       abendessenWahl := bestellen
-      playSound("doorbell", "Türklingel")
+      playSound("doorbell", "Doorbell rings")
       applyEffect("kohlenhydrate_mahlzeit", 3, 900)
 
       Tacos.
 
-  playSound("pen_open", "Insulinpen wird geöffnet")
-  playSound("inject", "Injektion")
-  Piks.
+  playSound("pen_open", "Insulin pen opens")
+  playSound("inject", "Injection")
+  Pinch.
 
-  "Autsch." Nur kurz. Dann verschwindet das Gefühl wieder.
+  "Ow." Just for a moment. Then the feeling fades again.
 
   insulinOnBoard += 2
 
@@ -1007,160 +1288,159 @@ beat Zuhause
 
 beat SchmerzWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("spritzen_schmerz", "Tut Spritzen weh?", "Insulin zu spritzen ist meistens kaum schmerzhaft. Manchmal kann ein Einstich aber kurz zwicken. Je nach Land werden unterschiedliche Systeme genutzt, etwa Pens, Pumpen oder Einwegspritzen. Nicht überall auf der Welt stehen dieselben Therapien zur Verfügung.")
+    - ❓ Learn more
+        unlockKnowledge("spritzen_schmerz", "Does injecting hurt?", "Injecting insulin is usually barely painful. Sometimes the needle prick can briefly sting. Different countries use different systems, such as pens, pumps, or single-use syringes. The same therapies aren't available everywhere in the world.")
 
         <knowledge>
-        Insulin zu spritzen ist meistens kaum schmerzhaft. Manchmal kann ein
-        Einstich aber kurz zwicken. Je nach Land werden unterschiedliche Systeme
-        genutzt, etwa Pens, Pumpen oder Einwegspritzen. Nicht überall auf der
-        Welt stehen dieselben Therapien zur Verfügung.
+        Injecting insulin is usually barely painful. Sometimes the
+        needle prick can briefly sting. Different countries use
+        different systems, such as pens, pumps, or single-use
+        syringes. The same therapies aren't available everywhere in
+        the world.
 
         pauseBeat(3)
 
         -> SchmerzWissen
 
-    ➡️ Weiter
+    NEXT
       -> DecisionFatigueWissen
 
 
 beat DecisionFatigueWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("decision_fatigue", "Decision Fatigue", "Menschen mit Typ-1-Diabetes treffen täglich dutzende gesundheitsbezogene Entscheidungen. Mit jedem weiteren Entscheid kann die sogenannte Decision Fatigue zunehmen. Nicht jede Entscheidung fällt am Abend gleich leicht wie am Morgen.")
+    - ❓ Learn more
+        unlockKnowledge("decision_fatigue", "Decision fatigue", "People with Type 1 diabetes make dozens of health-related decisions every day. With each additional decision, so-called decision fatigue can build up. Not every decision feels as easy in the evening as it does in the morning.")
 
         <knowledge>
-        Menschen mit Typ-1-Diabetes treffen täglich dutzende gesundheitsbezogene
-        Entscheidungen. Mit jedem weiteren Entscheid kann die sogenannte Decision
-        Fatigue zunehmen. Nicht jede Entscheidung fällt am Abend gleich leicht
-        wie am Morgen.
+        People with Type 1 diabetes make dozens of health-related
+        decisions every day. With each additional decision, so-called
+        decision fatigue can build up. Not every decision feels as
+        easy in the evening as it does in the morning.
 
         pauseBeat(3)
 
         -> DecisionFatigueWissen
 
-    ➡️ Weiter
+    NEXT
       -> Spaziergang
 
 
 // ------------------------------------------------------------
-// KAPITEL 8 — Spaziergang & Abschluss
+// CHAPTER 8 — Walk & Closing
 // ------------------------------------------------------------
 
 beat Spaziergang
-  Nach dem Essen schaust du nochmals auf dein Handy. Der Wert ist etwas
-  höher als erwartet.
+  After dinner you check your phone once more. The reading is a bit
+  higher than expected.
 
-  Du ziehst deine Schuhe an. Die Haustür fällt ins Schloss.
+  You put your shoes on. The front door clicks shut.
 
-  playSound("front_door", "Haustür fällt ins Schloss")
-  playAmbience("evening_walk", true, "Abendliche Geräusche draussen")
+  playSound("front_door", "Front door shuts")
+  playAmbience("evening_walk", true, "Walking along a forest path in the evening")
 
-  Man hört nur deine Schritte.
+  All you hear are your footsteps.
 
-  playSound("footsteps_calm", "Ruhige Schritte")
+  playSound("footsteps_calm", "Calm footsteps")
 
   bewegungAktiv = true
   applyEffect("bewegung_spaziergang", 1.5, 900)
 
-  Langsam beginnt die Kurve zu sinken.
+  Slowly, the curve begins to fall.
 
-  lumi: <mood_entspannt> Das tut gerade gut.
+  lumi: <mood_entspannt> This feels good right now.
 
   -> SpaziergangWissen
 
 beat SpaziergangWissen
   choice
-    - ❓ Mehr erfahren
-        unlockKnowledge("spaziergang_wirkung", "Bewegung nach dem Essen", "Schon ein kurzer Spaziergang nach dem Essen kann helfen, den Glukoseanstieg abzuflachen. Wie stark die Wirkung ist, ist von Mensch zu Mensch verschieden.")
+    - ❓ Learn more
+        unlockKnowledge("spaziergang_wirkung", "Movement after eating", "Even a short walk after a meal can help flatten a glucose rise. How strong the effect is varies from person to person.")
 
         <knowledge>
-        Schon ein kurzer Spaziergang nach dem Essen kann helfen, den
-        Glukoseanstieg abzuflachen. Wie stark die Wirkung ist, ist von Mensch
-        zu Mensch verschieden.
+        Even a short walk after a meal can help flatten a glucose
+        rise. How strong the effect is varies from person to person.
 
         pauseBeat(3)
 
         -> SpaziergangWissen
 
-    ➡️ Weiter
+    NEXT
       -> SpaziergangAbschluss
 
 
 beat SpaziergangAbschluss
-  Der Stress von heute Morgen fällt dir wieder ein.
+  This morning's stress crosses your mind again.
 
-  Anstrengend war das schon.
+  That was tiring, alright.
 
-  Aber wenn du ehrlich bist: Der Tag war eigentlich ganz okay.
+  But if you're honest: the day was actually pretty okay.
 
   -> Abschluss
 
 
 beat Abschluss
-  Die Schritte laufen weiter. Der Bildschirm wird ruhiger.
-  Die Glukosekurve stabilisiert sich.
+  Your steps carry on. The screen grows quieter.
+  The glucose curve settles.
 
-  Und dann war da noch die Sache mit dem Kunden. Der Chef hat sich gemeldet.
-  Erledigt. Ein kleiner Punkt am Rand dieses Tages, mehr nicht.
+  And then there was that thing with the client. The boss got in touch.
+  Handled. A small footnote to the day, nothing more.
 
-  playAmbience("evening_walk", false, "Abendgeräusche verklingen")
+  playAmbience("evening_walk", false, "Forest sounds fade as the walk ends")
 
-  Was hat dich heute am meisten überrascht?
+  What surprised you most today?
 
-  Welche Entscheidung fiel dir am schwersten?
+  Which decision was hardest for you?
 
-  Was wirst du von diesem Tag mitnehmen?
+  What will you take away from today?
 
   pauseBeat(4)
 
   if persona == "keinDiabetes"
-    Noch eine letzte Frage, bevor du weiterscrollst.
+    One last question before you scroll on.
 
-    Wie oft hast du heute an deinen eigenen Blutzucker gedacht?
-
-    pauseBeat(3)
-
-    Vermutlich gar nicht. Das ist ganz normal, wenn ein Körper das
-    einfach von selbst regelt.
-
-    Während du diese Rolle gespielt hast, hast du etwa 25 bis 40
-    Entscheidungen getroffen, die direkt oder indirekt mit Diabetes zu
-    tun hatten.
-
-    Für Menschen mit Typ-1-Diabetes ist das kein Spiel. Das ist heute.
-    Und morgen wieder.
+    How often today did you think about your own blood glucose?
 
     pauseBeat(3)
 
-  Heute hast du einen Tag mit Typ-1-Diabetes erlebt.
+    Probably never. That's perfectly normal, when a body just
+    regulates it by itself.
 
-  Nicht perfekt. Nicht aussergewöhnlich. Einfach einen ganz normalen Tag.
+    While playing this role, you made roughly 25 to 40 decisions
+    that were directly or indirectly related to diabetes.
 
-  Viele dieser Entscheidungen bleiben für Aussenstehende unsichtbar.
-  Doch sie begleiten jeden einzelnen Tag.
+    For people with Type 1 diabetes, that's not a game. That's today.
+    And tomorrow again.
+
+    pauseBeat(3)
+
+  Today you experienced a day with Type 1 diabetes.
+
+  Not perfect. Not extraordinary. Just a completely ordinary day.
+
+  Many of these decisions stay invisible to outsiders.
+  Yet they accompany every single day.
 
   pauseBeat(3)
 
-  Erinnerst du dich an die Frage vom Anfang?
+  Remember the question from the start?
 
   if anfangsEinschaetzung == "zuversichtlich"
-    Du hast dich zu Beginn zuversichtlich eingeschätzt.
+    At the start, you felt confident about it.
   else if anfangsEinschaetzung == "unsicher"
-    Du wusstest zu Beginn nicht so recht, was du davon halten sollst.
+    At the start, you weren't quite sure what to make of it.
   else
-    Du dachtest zu Beginn, das tönt kompliziert.
+    At the start, you thought it sounded complicated.
 
-  Wie siehst du das jetzt?
+  How do you see it now?
 
   choice
-    Ich glaube, eher gut.
+    I think it went pretty well.
       -> Kurvenaufloesung
 
-    Ich glaube, eher nicht so gut.
+    I think it didn't go so well.
       -> Kurvenaufloesung
 
-    Keine Ahnung.
+    No idea.
       -> Kurvenaufloesung
 
 
@@ -1169,22 +1449,326 @@ beat Kurvenaufloesung
 
   revealDayCurve()
 
-  Hier ist sie. Deine Glukosekurve von heute, von 04:00 Uhr bis jetzt.
+  Here it is. Your glucose curve from today, from 4am until now.
 
   pauseBeat(4)
 
-  Es gibt kein Gut. Es gibt kein Schlecht.
+  There is no good. There is no bad.
 
-  Es gibt nur: Was der Körper gerade macht, und was du gerade tust.
+  There is only: what the body is doing right now, and what you're doing right now.
 
   pauseBeat(3)
 
-  if playerName != ""
-    Danke, dass du ihn heute mitgegangen bist.
-  else
-    Danke, dass du ihn heute mitgegangen bist.
+  -> QuizAngebot
 
-  Was denkst du jetzt?
+
+// ------------------------------------------------------------
+// CHAPTER 8 (cont.) — Optional Quiz
+// Ungraded, self-check only. One question per knowledge bite from
+// the day. Entirely skippable — opting out goes straight to the
+// closing beat below, no penalty, no comment either way.
+// ------------------------------------------------------------
+
+beat QuizAngebot
+  Before we close, want to check what stuck? A few quick questions,
+  nothing scored, nothing graded.
+
+  choice
+    Sure, let's see what stuck.
+      -> QuizFrage1
+
+    No thanks, straight to the end for me.
+      -> AbschlussDank
+
+
+beat QuizFrage1
+  What happens to insulin production in Type 1 diabetes?
+
+  choice
+    It slows down gradually over many years.
+      -> QuizFrage1Antwort
+
+    It stops almost completely, so insulin has to come from outside.
+      -> QuizFrage1Antwort
+
+    It increases at first, then normalises.
+      -> QuizFrage1Antwort
+
+beat QuizFrage1Antwort
+  In Type 1, the pancreas stops producing insulin almost entirely —
+  that's why it has to be supplied from outside, several times a day.
+
+  pauseBeat(2)
+  -> QuizFrage2
+
+
+beat QuizFrage2
+  What's the difference between basal and bolus insulin?
+
+  choice
+    Basal covers the baseline need over many hours, bolus covers meals and corrections.
+      -> QuizFrage2Antwort
+
+    They're two names for the same thing.
+      -> QuizFrage2Antwort
+
+    Bolus is for the baseline, basal is for meals.
+      -> QuizFrage2Antwort
+
+beat QuizFrage2Antwort
+  Basal insulin acts slowly over many hours and covers the body's
+  baseline need. Bolus insulin is for meals or for correcting a high
+  reading.
+
+  pauseBeat(2)
+  -> QuizFrage3
+
+
+beat QuizFrage3
+  Why can mornings need more insulin than other times of day?
+
+  choice
+    People simply eat more at breakfast.
+      -> QuizFrage3Antwort
+
+    Hormones released just before waking make many people temporarily more insulin-resistant.
+      -> QuizFrage3Antwort
+
+    Insulin doesn't work at all in the morning.
+      -> QuizFrage3Antwort
+
+beat QuizFrage3Antwort
+  Hormones released just before waking make many people temporarily
+  more insulin-resistant — the same breakfast can play out completely
+  differently on different days.
+
+  pauseBeat(2)
+  -> QuizFrage4
+
+
+beat QuizFrage4
+  Besides carbohydrates, what else affects the glucose curve?
+
+  choice
+    Nothing else really matters.
+      -> QuizFrage4Antwort
+
+    Protein and fat too, usually more slowly.
+      -> QuizFrage4Antwort
+
+    Only how much water you drink with the meal.
+      -> QuizFrage4Antwort
+
+beat QuizFrage4Antwort
+  Protein and fat influence the curve too — usually more slowly and
+  over a longer period than carbohydrates alone.
+
+  pauseBeat(2)
+  -> QuizFrage5
+
+
+beat QuizFrage5
+  How does physical activity affect blood glucose?
+
+  choice
+    It always raises it.
+      -> QuizFrage5Antwort
+
+    It always lowers it.
+      -> QuizFrage5Antwort
+
+    Depending on the situation, it can cause a quick rise or a quick drop.
+      -> QuizFrage5Antwort
+
+beat QuizFrage5Antwort
+  Depending on the situation, activity can push the curve either way —
+  a quick rise or a quick drop, sometimes unpredictably.
+
+  pauseBeat(2)
+  -> QuizFrage6
+
+
+beat QuizFrage6
+  Why can stress raise blood glucose?
+
+  choice
+    Hormones like cortisol and adrenaline cause the liver to release glucose.
+      -> QuizFrage6Antwort
+
+    Stress has no real effect on glucose.
+      -> QuizFrage6Antwort
+
+    Stress only affects mood, never the body.
+      -> QuizFrage6Antwort
+
+beat QuizFrage6Antwort
+  Stress hormones like cortisol and adrenaline cause the liver to
+  release glucose — a normal, involuntary response of the body.
+
+  pauseBeat(2)
+  -> QuizFrage7
+
+
+beat QuizFrage7
+  How do people with Type 1 diabetes generally feel about injecting in public?
+
+  choice
+    Everyone feels exactly the same way about it.
+      -> QuizFrage7Antwort
+
+    It varies — some are comfortable, some prefer privacy, both are fine.
+      -> QuizFrage7Antwort
+
+    It's generally discouraged by doctors.
+      -> QuizFrage7Antwort
+
+beat QuizFrage7Antwort
+  It varies from person to person. Some are happy to answer questions,
+  others prefer to keep that moment to themselves — both are perfectly
+  fine.
+
+  pauseBeat(2)
+  -> QuizFrage8
+
+
+beat QuizFrage8
+  What are early signs that a low blood sugar might be announcing itself?
+
+  choice
+    A rash on the skin.
+      -> QuizFrage8Antwort
+
+    Trouble concentrating, shakiness, sweating, sudden hunger.
+      -> QuizFrage8Antwort
+
+    There usually are no warning signs at all.
+      -> QuizFrage8Antwort
+
+beat QuizFrage8Antwort
+  Trouble concentrating, shakiness, sweating, or a sudden intense
+  hunger can all be early signs — easy to miss when you're busy.
+
+  pauseBeat(2)
+  -> QuizFrage9
+
+
+beat QuizFrage9
+  What can help with estimating carbohydrates in a meal?
+
+  choice
+    Apps that photograph meals can help, but don't replace experience.
+      -> QuizFrage9Antwort
+
+    There's no way to estimate them at all.
+      -> QuizFrage9Antwort
+
+    Restaurants always list the exact carb count.
+      -> QuizFrage9Antwort
+
+beat QuizFrage9Antwort
+  Apps that photograph meals and estimate carbohydrates can help — but
+  they never fully replace one's own experience.
+
+  pauseBeat(2)
+  -> QuizFrage10
+
+
+beat QuizFrage10
+  Even with a lot of experience, is a perfectly predictable glucose curve possible?
+
+  choice
+    Yes, always, if you do everything right.
+      -> QuizFrage10Antwort
+
+    No — many factors act at once, so it's never fully predictable.
+      -> QuizFrage10Antwort
+
+    Only for people who don't take insulin.
+      -> QuizFrage10Antwort
+
+beat QuizFrage10Antwort
+  No — even with experience, there's no such thing as a perfect
+  glucose curve. Many factors act at once.
+
+  pauseBeat(2)
+  -> QuizFrage11
+
+
+beat QuizFrage11
+  Does injecting insulin usually hurt?
+
+  choice
+    It's usually barely painful, sometimes a brief sting.
+      -> QuizFrage11Antwort
+
+    It's always very painful.
+      -> QuizFrage11Antwort
+
+    It's painless — no needle is involved.
+      -> QuizFrage11Antwort
+
+beat QuizFrage11Antwort
+  Injecting is usually barely painful — sometimes just a brief sting.
+  Different countries use different systems: pens, pumps, or
+  single-use syringes.
+
+  pauseBeat(2)
+  -> QuizFrage12
+
+
+beat QuizFrage12
+  What is decision fatigue, in the context of Type 1 diabetes?
+
+  choice
+    A medical complication caused by high blood sugar.
+      -> QuizFrage12Antwort
+
+    The build-up from making dozens of health-related decisions every day.
+      -> QuizFrage12Antwort
+
+    A sleep disorder unrelated to diabetes.
+      -> QuizFrage12Antwort
+
+beat QuizFrage12Antwort
+  People with Type 1 diabetes make dozens of health-related decisions
+  every day. Each additional one can add to decision fatigue — not
+  every decision feels as easy in the evening as in the morning.
+
+  pauseBeat(2)
+  -> QuizFrage13
+
+
+beat QuizFrage13
+  How can a short walk after a meal affect a glucose rise?
+
+  choice
+    It has no effect at all.
+      -> QuizFrage13Antwort
+
+    It can help flatten the rise, though the effect varies from person to person.
+      -> QuizFrage13Antwort
+
+    It always causes a low.
+      -> QuizFrage13Antwort
+
+beat QuizFrage13Antwort
+  Even a short walk after eating can help flatten a glucose rise —
+  how strong the effect is varies from person to person.
+
+  pauseBeat(2)
+
+  That's everything from today.
+
+  -> AbschlussDank
+
+
+beat AbschlussDank
+  if playerName != ""
+    Thank you for going through today with him.
+  else
+    Thank you for going through today with him.
+
+  What are you thinking now?
 
   offerShare()
 

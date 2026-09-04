@@ -28,6 +28,14 @@ interface StoryState {
   curveVisible: boolean
   effects: EffectEvent[]
   unlockedKnowledge: KnowledgeEntry[]
+  // Sichtbares Gegenstueck zu jedem playSound()/playAmbience()-Aufruf (siehe
+  // WCAG-Anforderung in der Blueprint-Sektion 6: kein Audio-Cue ohne visuelles
+  // Aequivalent). captionSeq erhoeht sich bei JEDEM Aufruf, auch bei
+  // wiederholt demselben Text - StatusBar remounted die Caption darueber neu,
+  // damit die Fade-Animation erneut abspielt statt bei identischem Text
+  // stumm zu bleiben.
+  caption: string | null
+  captionSeq: number
   // Zaehlt separat von unlockedKnowledge.length hoch - unlockKnowledge() feuert
   // sofort beim Waehlen der Choice (noch bevor das Modal ueberhaupt offen ist),
   // die Pop-Animation des StatusBar-Badges soll aber erst beim "aha"/Schliessen
@@ -37,6 +45,7 @@ interface StoryState {
   isWaiting: boolean
   setCurve: (value: number, trend: Trend, zeit: string) => void
   setLumiMood: (mood: string | null) => void
+  setCaption: (caption: string) => void
   applyEffect: (type: string, magnitude: number, delaySeconds: number) => void
   revealCurve: () => void
   unlockKnowledge: (id: string, title: string, text: string) => void
@@ -55,6 +64,8 @@ const initialState = {
   unlockedKnowledge: [] as KnowledgeEntry[],
   knowledgeBadgePulse: 0,
   isWaiting: false,
+  caption: null as string | null,
+  captionSeq: 0,
 }
 
 export const useStoryStore = create<StoryState>((set) => ({
@@ -68,6 +79,8 @@ export const useStoryStore = create<StoryState>((set) => ({
     })),
 
   setLumiMood: (mood) => set({ lumiMood: mood }),
+
+  setCaption: (caption) => set((state) => ({ caption, captionSeq: state.captionSeq + 1 })),
 
   applyEffect: (type, magnitude, delaySeconds) =>
     set((state) => ({

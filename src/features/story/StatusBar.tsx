@@ -25,6 +25,14 @@ export function StatusBar() {
   // Escape/Backdrop im Modal), nicht schon beim Waehlen der Choice. So spielt
   // die Pop-Animation genau im Moment des Uebernehmens, nicht vorzeitig.
   const knowledgeBadgePulse = useStoryStore((state) => state.knowledgeBadgePulse)
+  // Sichtbares/vorlesbares Gegenstueck zu jedem playSound()/playAmbience()
+  // im .lor-Skript (siehe functions.ts) - erfuellt die WCAG-Anforderung aus
+  // der Blueprint-Sektion 6, dass kein Audio-Cue ohne Text-Aequivalent
+  // auskommt. key=captionSeq statt caption, damit auch ein wiederholter
+  // identischer Text (z.B. zweimal "Front door shuts") die Fade-Animation
+  // erneut auslöst.
+  const caption = useStoryStore((state) => state.caption)
+  const captionSeq = useStoryStore((state) => state.captionSeq)
   // Dieselbe Uhrzeit-Quelle wie die tageszeitabhaengige Mark-Farbe in
   // StoryPlayer.tsx (zuletzt via setCurve() gesetzt) - erscheint erst, sobald
   // ein erster Wert vorliegt, analog zum Knowledge-Badge daneben.
@@ -51,7 +59,7 @@ export function StatusBar() {
             className="status-bar__mood"
             style={{ color: lumiMood ? LUMI_MOOD_COLORS[lumiMood] : undefined }}
           >
-            <LumiMoodIcon moodKey={lumiMood} size={22} />
+            <LumiMoodIcon moodKey={lumiMood} size={34} />
           </span>
           {unlockedKnowledge.length > 0 && (
             // key sorgt fuer einen frischen Mount bei jedem Pulse, damit die
@@ -70,8 +78,14 @@ export function StatusBar() {
           )}
         </div>
 
-        {latestZeit && <span className="status-bar__time">{latestZeit} Uhr</span>}
+        {latestZeit && <span className="status-bar__time">{latestZeit}</span>}
       </div>
+
+      {caption && (
+        <span key={captionSeq} className="status-bar__caption" role="status" aria-live="polite">
+          🔊 {caption}
+        </span>
+      )}
 
       {libraryOpen && unlockedKnowledge.length > 0 && (
         <div className="status-bar__knowledge-panel">

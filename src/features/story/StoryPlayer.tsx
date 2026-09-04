@@ -45,7 +45,10 @@ const FIRST_KNOWLEDGE_TAG = 'first_knowledge'
 // Der wiederkehrende "weiter erzaehlen"-Choice-Text aus dem .lor-Skript (11x,
 // jeweils die einzige verbleibende Option nach einer bereits genutzten
 // Wissens-Choice) - >>> uebernimmt genau diese Choice direkt, siehe StoryStage.
-const WEITER_CHOICE_TEXT = '➡️ Weiter'
+// War vorher '➡️ Weiter' (deutscher Leftover aus einem frueheren Entwurf) -
+// stimmte seit der Uebersetzung ins Englische nie mit dem tatsaechlichen
+// Skripttext ueberein, das automatische >>>-Uebernehmen griff dadurch nie.
+const WEITER_CHOICE_TEXT = 'NEXT'
 
 // Beim Anklicken einer Wissens-Gluehbirne "wandert" sie sichtbar in die
 // Statusleiste (dorthin, wo das gesammelte Wissen tatsaechlich lebt, siehe
@@ -234,43 +237,37 @@ function StoryStage({ entry, choices, onChoose }: StoryStageProps) {
   // Typewriter selbst noch laeuft.
   const isWaiting = useStoryStore((state) => state.isWaiting)
 
-  // >>> ersetzt den separaten "➡️ Weiter"-Choice-Button ueberall dort, wo er
-  // im Skript verwendet wird (11x, jeweils als einzige verbleibende Option
-  // nach einer bereits genutzten Wissens-Choice). Bewusst NICHT generisch auf
-  // "irgendeine einzelne Choice" ausgeweitet - echte narrative Erst-
-  // Entscheidungen mit nur einer Option (z.B. "Ich bin bereit.") sind KEIN
-  // "Weiter" und sollen sichtbar bleiben. Kein Eingriff in Loreline/
-  // useLoreline.ts noetig: >>> waehlt hier einfach direkt die passende
-  // Choice aus, statt einen eigenen Auto-Select-Mechanismus im Interpreter
-  // zu bauen.
-  const soleContinueChoiceIndex =
+  // >>> ersetzt den "NEXT"-Choice-Button ueberall dort, wo er im Skript
+  // verwendet wird - IMMER, nicht nur wenn er die einzige aktivierte Choice
+  // ist: eine parallel aktivierte Wissens-Choice ("❓ Learn more") soll NEXT
+  // nicht mehr zu einem sichtbaren Text-Button neben der Gluehbirne machen
+  // (fruehers Clutter: Gluehbirne UND ein separater "NEXT"-Button
+  // gleichzeitig sichtbar). Bewusst NICHT generisch auf "irgendeine einzelne
+  // Choice" ausgeweitet - echte narrative Erst-Entscheidungen mit nur einer
+  // Option (z.B. "Ich bin bereit.") sind KEIN "Weiter" und sollen sichtbar
+  // bleiben. Kein Eingriff in Loreline/useLoreline.ts noetig: >>> waehlt hier
+  // einfach direkt die passende Choice aus, statt einen eigenen
+  // Auto-Select-Mechanismus im Interpreter zu bauen.
+  const continueChoiceIndex =
     choices?.findIndex((choice) => choice.enabled && choice.text.trim() === WEITER_CHOICE_TEXT) ?? -1
-  const hasSoleContinueChoice =
-    soleContinueChoiceIndex >= 0 && (choices?.filter((choice) => choice.enabled).length ?? 0) === 1
+  const hasContinueChoice = continueChoiceIndex >= 0
 
-  const showSkip = (isNarrative && !done) || isWaiting || hasSoleContinueChoice
+  const showSkip = (isNarrative && !done) || isWaiting || hasContinueChoice
   const handleSkip = () => {
-    if (hasSoleContinueChoice) {
+    if (hasContinueChoice) {
       haptics.choiceTap()
-      onChoose(soleContinueChoiceIndex)
+      onChoose(continueChoiceIndex)
       return
     }
     skip()
     skipCurrentWait()
   }
-  // Sobald >>> die "➡️ Weiter"-Choice uebernimmt, wird der Choice-Block selbst
-  // ausgeblendet (siehe unten) - kein zweites, konkurrierendes "Weiter"-
-  // Button-Muster neben >>>.
-  const showInteractive = Boolean(choices) && !hasSoleContinueChoice
 
-  // Die (nicht-erste) Wissens-Choice ging zwischen den anderen Choices unter -
-  // sie zieht jetzt in denselben festen Slot wie >>>, wo der Blick durch
-  // Gewohnheit ohnehin hinwandert. >>> und die Gluehbirne schliessen sich
-  // gegenseitig aus (siehe showSkip oben): erst wenn nichts mehr zu
-  // ueberspringen/warten ist, wird der Slot frei fuer die Gluehbirne. Die
-  // allererste Wissens-Choice (<first_knowledge>) bleibt bewusst als
-  // Ausnahme inline in der Choice-Liste (siehe unten), da sie dort mit
-  // sichtbarem Text das Konzept erklaert.
+  // Die (nicht-erste) Wissens-Choice geht zwischen den anderen Choices unter -
+  // sie zieht in einen eigenen Gluehbirnen-Slot statt in die normale
+  // Choice-Liste. Die allererste Wissens-Choice (<first_knowledge>) bleibt
+  // bewusst als Ausnahme inline in der Choice-Liste (siehe unten), da sie
+  // dort mit sichtbarem Text das Konzept erklaert.
   const cornerKnowledgeChoiceIndex =
     choices?.findIndex(
       (choice) =>
@@ -278,6 +275,20 @@ function StoryStage({ entry, choices, onChoose }: StoryStageProps) {
         choice.text.startsWith(KNOWLEDGE_CHOICE_PREFIX) &&
         !choice.tags.some((tag) => tag.value === FIRST_KNOWLEDGE_TAG),
     ) ?? -1
+
+  // >>> und die Gluehbirne teilen sich NICHT mehr denselben Slot (siehe
+  // .story-stage__corner-actions in StoryPlayer.css) - beide koennen
+  // gleichzeitig noetig sein, z.B. waehrend eine Wissens-Choice noch
+  // ungenutzt daliegt UND NEXT bereits aktiviert ist.
+  const showCornerKnowledge = cornerKnowledgeChoiceIndex >= 0
+  // Nur "echte" Entscheidungs-Choices bleiben in der normalen Liste - Wissen
+  // und NEXT werden beide gesondert behandelt (Gluehbirne/>>>) und tauchen
+  // hier nie als Text auf.
+  const hasPlainChoices =
+    choices?.some(
+      (choice, index) => choice.enabled && index !== cornerKnowledgeChoiceIndex && index !== continueChoiceIndex,
+    ) ?? false
+  const showInteractive = hasPlainChoices
 
   // 'start': die Frage bleibt oben verankert, auch wenn Frage+Choices
   // zusammen nicht in die max-height passen - siehe useScrollFollow.ts.
@@ -325,9 +336,9 @@ function StoryStage({ entry, choices, onChoose }: StoryStageProps) {
                   weggelassen (nicht nur optisch versteckt) - sonst bliebe die
                   "➡️ Weiter"-Choice per Tab/Screenreader trotzdem erreichbar,
                   obwohl >>> bereits dieselbe Aktion anbietet. */}
-              {choices && !hasSoleContinueChoice && (
+              {showInteractive && (
                 <div className="story-choices">
-                  {choices
+                  {choices!
                     .map((choice, index) => ({ choice, index }))
                     // Deaktivierte Choices verschwinden komplett - gilt jetzt
                     // auch fuer Wissens-Choices: statt gedimmt liegenzubleiben,
@@ -335,8 +346,13 @@ function StoryStage({ entry, choices, onChoose }: StoryStageProps) {
                     // Statusleiste (siehe flyKnowledgeIconToStatusBar), das
                     // Verschwinden an der Ursprungsstelle ist Teil davon. Die
                     // nicht-erste Wissens-Choice erscheint hier ebenfalls nicht -
-                    // sie rendert stattdessen im Skip-Slot (siehe unten).
-                    .filter(({ choice, index }) => choice.enabled && index !== cornerKnowledgeChoiceIndex)
+                    // sie rendert stattdessen als eigene Gluehbirne, NEXT nie
+                    // als Text - beide rendern stattdessen in
+                    // .story-stage__corner-actions (siehe unten).
+                    .filter(
+                      ({ choice, index }) =>
+                        choice.enabled && index !== cornerKnowledgeChoiceIndex && index !== continueChoiceIndex,
+                    )
                     .map(({ choice, index }) => {
                       const isKnowledgeChoice = choice.text.startsWith(KNOWLEDGE_CHOICE_PREFIX)
 
@@ -394,30 +410,34 @@ function StoryStage({ entry, choices, onChoose }: StoryStageProps) {
         </div>
       </div>
 
-      {showSkip ? (
-        <button
-          type="button"
-          className={hasSoleContinueChoice ? 'story-skip story-skip--continue' : 'story-skip'}
-          onClick={handleSkip}
-          aria-label={hasSoleContinueChoice ? 'Weiter' : 'Überspringen'}
-        >
-          {'>>>'}
-        </button>
-      ) : (
-        cornerKnowledgeChoiceIndex >= 0 && (
-          <button
-            type="button"
-            className="story-knowledge-button story-knowledge-button--corner"
-            aria-label="Mehr erfahren"
-            onClick={(event) => {
-              event.stopPropagation()
-              haptics.choiceTap()
-              onChoose(cornerKnowledgeChoiceIndex)
-            }}
-          >
-            💡
-          </button>
-        )
+      {(showSkip || showCornerKnowledge) && (
+        <div className="story-stage__corner-actions">
+          {showCornerKnowledge && (
+            <button
+              type="button"
+              className="story-knowledge-button story-knowledge-button--corner"
+              aria-label="Mehr erfahren"
+              onClick={(event) => {
+                event.stopPropagation()
+                haptics.choiceTap()
+                onChoose(cornerKnowledgeChoiceIndex)
+              }}
+            >
+              💡
+            </button>
+          )}
+
+          {showSkip && (
+            <button
+              type="button"
+              className={hasContinueChoice ? 'story-skip story-skip--continue' : 'story-skip'}
+              onClick={handleSkip}
+              aria-label={hasContinueChoice ? 'Weiter' : 'Überspringen'}
+            >
+              {'>>>'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

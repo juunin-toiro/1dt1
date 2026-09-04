@@ -1,6 +1,5 @@
 import { PlasmicCanvasHost } from '@plasmicapp/loader-react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { DevPanel } from './features/dev/DevPanel'
 import { StoryPlayer } from './features/story/StoryPlayer'
 import './lib/plasmic-init'
 
@@ -9,15 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/plasmic-host" element={<PlasmicCanvasHost />} />
-        <Route
-          path="/*"
-          element={
-            <>
-              <StoryPlayer />
-              <DevPanel />
-            </>
-          }
-        />
+        <Route path="/*" element={<StoryPlayer />} />
       </Routes>
     </BrowserRouter>
   )

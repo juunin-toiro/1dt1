@@ -85,6 +85,32 @@
   }
 }
 
+/* Sichtbares Gegenstueck zu jedem Sound-/Ambience-Cue (siehe StatusBar.tsx) -
+   blendet ein, bleibt kurz stehen, blendet dann von selbst wieder aus. Bleibt
+   nach dem Verblassen im DOM (opacity: 0, forwards), damit Screenreader den
+   zuletzt angesagten Text bei Bedarf erneut abfragen koennen. */
+.status-bar__caption {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #a8a79c;
+  animation: status-bar-caption-fade 4.5s ease forwards;
+}
+
+@keyframes status-bar-caption-fade {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .status-bar__knowledge-toggle {
   border: none;
   background: transparent;
